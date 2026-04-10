@@ -124,6 +124,8 @@ allocproc(void)
 found:
   p->pid = allocpid();
   p->state = USED;
+  // Thêm dòng này để reset bộ lọc về 0 cho tiến trình mới
+  p->syscall_mask = 0;
 
   // Allocate a trapframe page.
   if((p->trapframe = (struct trapframe *)kalloc()) == 0){
@@ -268,6 +270,8 @@ kfork(void)
     return -1;
   }
 
+  np->syscall_mask = p->syscall_mask;
+  
   // Copy user memory from parent to child.
   if(uvmcopy(p->pagetable, np->pagetable, p->sz) < 0){
     freeproc(np);

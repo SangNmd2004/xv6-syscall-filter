@@ -48,3 +48,4 @@ void printf(const char*, ...) __attribute__ ((format (printf, 1, 2)));
 void* malloc(uint);
 void free(void*);
 int hello(void);
+int setfilter(uint64);

@@ -114,3 +114,18 @@ sys_hello(void)
   printf("kernel: hello() called by pid %d\n", p->pid);
   return 42;
 }
+uint64
+sys_setfilter(void)
+{
+  uint64 mask;
+
+  // Trong xv6-riscv, argaddr trả về void. 
+  // Bạn chỉ cần gọi hàm, nó sẽ nạp giá trị vào biến mask.
+  argaddr(0, &mask);
+
+  // Gán mask cho tiến trình hiện tại
+  struct proc *p = myproc();
+  p->syscall_mask = mask;
+
+  return 0;
+}
