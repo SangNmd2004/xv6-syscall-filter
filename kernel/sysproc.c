@@ -112,5 +112,5 @@ sys_hello(void)
 {
   struct proc *p = myproc();
   printf("kernel: hello() called by pid %d\n", p->pid);
-  return 0;
+  return 42;
 }
