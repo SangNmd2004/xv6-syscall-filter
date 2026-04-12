@@ -2,9 +2,7 @@
 #include "kernel/stat.h"
 #include "user/user.h"
 
-int main(void)
-{
-  hello();
-  printf("user: hello() returned\n");
-  exit(0);
+int main() {
+    write(1, "hello\n", 6);
+    exit(0);
 }

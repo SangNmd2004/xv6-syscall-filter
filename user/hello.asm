@@ -9,19 +9,18 @@ Disassembly of section .text:
 #include "kernel/stat.h"
 #include "user/user.h"
 
-int main(void)
-{
+int main() {
    0:	1141                	addi	sp,sp,-16
    2:	e406                	sd	ra,8(sp)
    4:	e022                	sd	s0,0(sp)
    6:	0800                	addi	s0,sp,16
-  hello();
-   8:	34a000ef          	jal	352 <hello>
-  printf("user: hello() returned\n");
-   c:	00001517          	auipc	a0,0x1
-  10:	88450513          	addi	a0,a0,-1916 # 890 <malloc+0xfa>
-  14:	6ce000ef          	jal	6e2 <printf>
-  exit(0);
+    write(1, "hello\n", 6);
+   8:	4619                	li	a2,6
+   a:	00001597          	auipc	a1,0x1
+   e:	88658593          	addi	a1,a1,-1914 # 890 <malloc+0xfa>
+  12:	4505                	li	a0,1
+  14:	2be000ef          	jal	2d2 <write>
+    exit(0);
   18:	4501                	li	a0,0
   1a:	298000ef          	jal	2b2 <exit>
 
@@ -766,7 +765,7 @@ printint(int fd, long long xx, int base, int sgn)
   do{
     buf[i++] = digits[x % base];
  392:	00000517          	auipc	a0,0x0
- 396:	51e50513          	addi	a0,a0,1310 # 8b0 <digits>
+ 396:	50e50513          	addi	a0,a0,1294 # 8a0 <digits>
  39a:	883e                	mv	a6,a5
  39c:	2785                	addiw	a5,a5,1
  39e:	02c5f733          	remu	a4,a1,a2
@@ -1128,7 +1127,7 @@ vprintf(int fd, const char *fmt, va_list ap)
  626:	4941                	li	s2,16
     putc(fd, digits[x >> (sizeof(uint64) * 8 - 4)]);
  628:	00000b97          	auipc	s7,0x0
- 62c:	288b8b93          	addi	s7,s7,648 # 8b0 <digits>
+ 62c:	278b8b93          	addi	s7,s7,632 # 8a0 <digits>
  630:	03c9d793          	srli	a5,s3,0x3c
  634:	97de                	add	a5,a5,s7
  636:	0007c583          	lbu	a1,0(a5)
@@ -1174,7 +1173,7 @@ vprintf(int fd, const char *fmt, va_list ap)
  688:	bbd9                	j	45e <vprintf+0x4a>
           s = "(null)";
  68a:	00000917          	auipc	s2,0x0
- 68e:	21e90913          	addi	s2,s2,542 # 8a8 <malloc+0x112>
+ 68e:	20e90913          	addi	s2,s2,526 # 898 <malloc+0x102>
         for(; *s; s++)
  692:	02800593          	li	a1,40
  696:	b7c5                	j	676 <vprintf+0x262>
