@@ -1,10 +1,14 @@
 #include "kernel/types.h"
-#include "kernel/stat.h"
 #include "user/user.h"
 
-int main(void)
+int
+main(int argc, char *argv[])
 {
-  hello();
-  printf("user: hello() returned\n");
-  exit(0);
+    // Gọi syscall hello() và nhận giá trị trả về
+    int result = hello();
+    
+    // In kết quả nhận được từ kernel ra màn hình
+    printf("User: hello() returned %d\n", result);
+    
+    exit(0);
 }
