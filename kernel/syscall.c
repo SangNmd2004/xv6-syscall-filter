@@ -101,8 +101,8 @@ extern uint64 sys_unlink(void);
 extern uint64 sys_link(void);
 extern uint64 sys_mkdir(void);
 extern uint64 sys_close(void);
-extern uint64 sys_hello(void);
 extern uint64 sys_setfilter(void);
+extern uint64 sys_getfilter(void);
 // An array mapping syscall numbers from syscall.h
 // to the function that handles the system call.
 static uint64 (*syscalls[])(void) = {
@@ -127,11 +127,11 @@ static uint64 (*syscalls[])(void) = {
 [SYS_link]    sys_link,
 [SYS_mkdir]   sys_mkdir,
 [SYS_close]   sys_close,
-[SYS_hello]   sys_hello,
 [SYS_setfilter] sys_setfilter,
+[SYS_getfilter] sys_getfilter,
 };
 
-// Trong kernel/syscall.c
+
 void
 syscall(void)
 {
@@ -141,14 +141,21 @@ syscall(void)
   num = p->trapframe->a7;
   if(num > 0 && num < NELEM(syscalls) && syscalls[num]) {
     
-    // Kiểm tra xem bit thứ num có được bật trong syscall_mask không
-    if((p->syscall_mask >> num) & 1) {
-      p->trapframe->a0 = -1; // Trả về lỗi nếu bị chặn
-      return;
+    // Kiểm tra mask
+    if(p->mask > 0 && !(p->mask & (1ULL << num))) {
+      
+      // Chặn mọi thứ TRỪ những cái sống còn
+      // SYS_exit (2) và SYS_setfilter (22) là bắt buộc phải thả
+      if(num != SYS_exit && num != SYS_setfilter) {
+        
+        // TẠM THỜI XÓA DÒNG PRINTF Ở ĐÂY ĐỂ HẾT LẶP
+        // printf("Sandboxing: syscall %d bi chan!\n", num); 
+        
+        p->trapframe->a0 = -1; 
+        return;
+      }
     }
 
     p->trapframe->a0 = syscalls[num]();
-  } else {
-    // ...
   }
 }
