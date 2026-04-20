@@ -95,8 +95,6 @@ sys_kill(void)
   return kkill(pid);
 }
 
-// return how many clock tick interrupts have occurred
-// since start.
 uint64
 sys_uptime(void)
 {
@@ -107,25 +105,21 @@ sys_uptime(void)
   release(&tickslock);
   return xticks;
 }
-uint64
-sys_hello(void)
-{
-  struct proc *p = myproc();
-  printf("kernel: hello() called by pid %d\n", p->pid);
-  return 42;
-}
+
 uint64
 sys_setfilter(void)
 {
   uint64 mask;
-
-  // Trong xv6-riscv, argaddr trả về void. 
-  // Bạn chỉ cần gọi hàm, nó sẽ nạp giá trị vào biến mask.
-  argaddr(0, &mask);
-
-  // Gán mask cho tiến trình hiện tại
+  argaddr(0, &mask); 
+  
   struct proc *p = myproc();
-  p->syscall_mask = mask;
-
+  p->mask = mask;
+  
   return 0;
+}
+
+uint64
+sys_getfilter(void)
+{
+  return myproc()->mask;
 }
