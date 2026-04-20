@@ -147,6 +147,7 @@ UPROGS=\
 	$U/_dorphan\
 	$U/_filtertest\
 	$U/_syscalltest\
+	$U/_k28_test\
     $U/_hello
 		
 
