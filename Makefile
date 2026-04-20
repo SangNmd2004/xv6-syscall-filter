@@ -147,7 +147,7 @@ UPROGS=\
 	$U/_dorphan\
 	$U/_filtertest\
 	$U/_syscalltest\
-        $U/_hello
+    $U/_hello
 		
 
 fs.img: mkfs/mkfs README $(UPROGS)

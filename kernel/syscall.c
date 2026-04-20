@@ -62,10 +62,11 @@ argint(int n, int *ip)
 // Retrieve an argument as a pointer.
 // Doesn't check for legality, since
 // copyin/copyout will do that.
-void
+int
 argaddr(int n, uint64 *ip)
 {
   *ip = argraw(n);
+  return 0;
 }
 
 // Fetch the nth word-sized system call argument as a null-terminated string.
@@ -102,6 +103,9 @@ extern uint64 sys_link(void);
 extern uint64 sys_mkdir(void);
 extern uint64 sys_close(void);
 extern uint64 sys_hello(void);
+extern uint64 sys_setfilter(void);
+extern uint64 sys_getfilter(void);
+
 // An array mapping syscall numbers from syscall.h
 // to the function that handles the system call.
 static uint64 (*syscalls[])(void) = {
@@ -127,8 +131,13 @@ static uint64 (*syscalls[])(void) = {
 [SYS_mkdir]   sys_mkdir,
 [SYS_close]   sys_close,
 [SYS_hello]   sys_hello,
+[SYS_setfilter] sys_setfilter,
+[SYS_getfilter] sys_getfilter,
+
+
 };
 
+// Trong kernel/syscall.c
 void
 syscall(void)
 {
@@ -136,13 +145,17 @@ syscall(void)
   struct proc *p = myproc();
 
   num = p->trapframe->a7;
+  //printf("DEBUG: Syscall dang duoc goi co so hieu la: %d\n", num);
   if(num > 0 && num < NELEM(syscalls) && syscalls[num]) {
-    // Use num to lookup the system call function for num, call it,
-    // and store its return value in p->trapframe->a0
+    
+    // Kiểm tra xem bit thứ num có được bật trong syscall_mask không
+    if((p->syscall_mask >> num) & 1) {
+      p->trapframe->a0 = -1; // Trả về lỗi nếu bị chặn
+      return;
+    }
+
     p->trapframe->a0 = syscalls[num]();
   } else {
-    printf("%d %s: unknown sys call %d\n",
-            p->pid, p->name, num);
-    p->trapframe->a0 = -1;
+    // ...
   }
 }

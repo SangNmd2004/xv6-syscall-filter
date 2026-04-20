@@ -114,3 +114,25 @@ sys_hello(void)
   printf("kernel: hello() called by pid %d\n", p->pid);
   return 0;
 }
+// [DEV 3 TỰ THÊM ĐỂ TEST - SẼ XÓA KHI DUY PUSH CODE THẬT]
+uint64
+sys_getfilter(void)
+{
+  uint64 mask = myproc()->syscall_mask;
+  printf("DEBUG: Kernel tra ve mask = %d\n", (int)mask);
+  return mask;
+}
+
+uint64
+sys_setfilter(void)
+{
+  uint64 mask;
+  // Lấy tham số mask từ user space
+  if(argaddr(0, &mask) < 0)
+    return -1;
+  
+  // Gán mask vào struct proc
+  myproc()->syscall_mask = mask;
+  
+  return 0;
+}

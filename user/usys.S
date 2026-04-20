@@ -110,3 +110,13 @@ hello:
  li a7, SYS_hello
  ecall
  ret
+.global setfilter
+setfilter:
+ li a7, SYS_setfilter
+ ecall
+ ret
+.global getfilter
+getfilter:
+ li a7, SYS_getfilter
+ ecall
+ ret
