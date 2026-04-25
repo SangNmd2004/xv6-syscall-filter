@@ -1,28 +1,51 @@
+#ifndef _FILTER_H_
+#define _FILTER_H_
+
 #include "kernel/syscall.h"
 
-// Định nghĩa macro dịch bit tương ứng với số hiệu syscall
-#define FILTER_FORK    (1ULL << SYS_fork)
-#define FILTER_EXIT    (1ULL << SYS_exit)
-#define FILTER_WAIT    (1ULL << SYS_wait)
-#define FILTER_PIPE    (1ULL << SYS_pipe)
-#define FILTER_READ    (1ULL << SYS_read)
-#define FILTER_KILL    (1ULL << SYS_kill)
-#define FILTER_EXEC    (1ULL << SYS_exec)
-#define FILTER_FSTAT   (1ULL << SYS_fstat)
-#define FILTER_CHDIR   (1ULL << SYS_chdir)
-#define FILTER_DUP     (1ULL << SYS_dup)
-#define FILTER_GETPID  (1ULL << SYS_getpid)
-#define FILTER_SBRK    (1ULL << SYS_sbrk)
-#define FILTER_SLEEP   (1ULL << SYS_sleep)
-#define FILTER_UPTIME  (1ULL << SYS_uptime)
-#define FILTER_OPEN    (1ULL << SYS_open)
-#define FILTER_WRITE   (1ULL << SYS_write)
-#define FILTER_MKNOD   (1ULL << SYS_mknod)
-#define FILTER_UNLINK  (1ULL << SYS_unlink)
-#define FILTER_LINK    (1ULL << SYS_link)
-#define FILTER_MKDIR   (1ULL << SYS_mkdir)
-#define FILTER_CLOSE   (1ULL << SYS_close)
+// Macro tạo mask bằng cách dịch bit 1 sang trái n lần
+#define BLOCK(n) (1L << (n))
 
-// Thêm syscall mới của m vào đây nếu muốn lọc chính nó
-#define FILTER_SETFILTER (1ULL << SYS_setfilter)
-#define FILTER_GETFILTER (1ULL << SYS_getfilter)
+// ── Core process management ──────────────────────────────────────────────────
+#define FILTER_FORK      BLOCK(SYS_fork)    // block fork()
+#define FILTER_EXIT      BLOCK(SYS_exit)    // block exit()
+#define FILTER_WAIT      BLOCK(SYS_wait)    // block wait()
+#define FILTER_EXEC      BLOCK(SYS_exec)    // block exec()
+#define FILTER_GETPID    BLOCK(SYS_getpid)  // block getpid()
+#define FILTER_KILL      BLOCK(SYS_kill)    // block kill()
+#define FILTER_PAUSE     BLOCK(SYS_pause)   // block pause()
+
+// ── File / I/O ───────────────────────────────────────────────────────────────
+#define FILTER_READ      BLOCK(SYS_read)    // block read()
+#define FILTER_WRITE     BLOCK(SYS_write)   // block write()
+#define FILTER_OPEN      BLOCK(SYS_open)    // block open()
+#define FILTER_CLOSE     BLOCK(SYS_close)   // block close()
+#define FILTER_PIPE      BLOCK(SYS_pipe)    // block pipe()
+#define FILTER_DUP       BLOCK(SYS_dup)     // block dup()
+#define FILTER_FSTAT     BLOCK(SYS_fstat)   // block fstat()
+
+// ── Filesystem ───────────────────────────────────────────────────────────────
+#define FILTER_MKNOD     BLOCK(SYS_mknod)   // block mknod()
+#define FILTER_UNLINK    BLOCK(SYS_unlink)  // block unlink()
+#define FILTER_LINK      BLOCK(SYS_link)    // block link()
+#define FILTER_MKDIR     BLOCK(SYS_mkdir)   // block mkdir()
+#define FILTER_CHDIR     BLOCK(SYS_chdir)   // block chdir()
+
+// ── Memory ───────────────────────────────────────────────────────────────────
+#define FILTER_SBRK      BLOCK(SYS_sbrk)    // block sbrk()
+
+// ── Miscellaneous ────────────────────────────────────────────────────────────
+#define FILTER_UPTIME    BLOCK(SYS_uptime)  // block uptime()
+#define FILTER_HELLO     BLOCK(SYS_hello)   // block hello()
+
+// ── Compound helpers ─────────────────────────────────────────────────────────
+// Block ALL I/O-related syscalls at once
+#define FILTER_ALL_IO    (FILTER_READ | FILTER_WRITE | FILTER_OPEN  | \
+                          FILTER_CLOSE | FILTER_PIPE | FILTER_DUP   | \
+                          FILTER_FSTAT)
+
+// Block all filesystem mutation syscalls
+#define FILTER_ALL_FS    (FILTER_MKNOD | FILTER_UNLINK | FILTER_LINK | \
+                          FILTER_MKDIR | FILTER_CHDIR)
+
+#endif // _FILTER_H_

@@ -124,8 +124,12 @@ allocproc(void)
 found:
   p->pid = allocpid();
   p->state = USED;
+<<<<<<< HEAD
   // Thêm dòng này để reset bộ lọc về 0 cho tiến trình mới
   p->mask = 0;
+=======
+  p->syscall_mask = 0;
+>>>>>>> origin/dev1/kernel-internals
 
   // Allocate a trapframe page.
   if((p->trapframe = (struct trapframe *)kalloc()) == 0){
@@ -170,6 +174,7 @@ freeproc(struct proc *p)
   p->chan = 0;
   p->killed = 0;
   p->xstate = 0;
+  p->syscall_mask = 0;
   p->state = UNUSED;
 }
 
@@ -293,6 +298,10 @@ kfork(void)
   np->cwd = idup(p->cwd);
 
   safestrcpy(np->name, p->name, sizeof(p->name));
+
+  // Inherit syscall filter from parent (Policy C: additive-only ratchet).
+  // Child starts with the same blocked set; it may tighten but not loosen.
+  np->syscall_mask = p->syscall_mask;
 
   pid = np->pid;
 
