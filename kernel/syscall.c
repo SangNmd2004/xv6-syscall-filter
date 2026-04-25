@@ -53,21 +53,22 @@ argraw(int n)
 }
 
 // Fetch the nth 32-bit system call argument.
-void
+int
 argint(int n, int *ip)
 {
   *ip = argraw(n);
+  return 0;
 }
 
 // Retrieve an argument as a pointer.
 // Doesn't check for legality, since
 // copyin/copyout will do that.
-void
+int
 argaddr(int n, uint64 *ip)
 {
   *ip = argraw(n);
+  return 0; // Hoặc logic kiểm tra lỗi của bạn
 }
-
 // Fetch the nth word-sized system call argument as a null-terminated string.
 // Copies into buf, at most max.
 // Returns string length if OK (including nul), -1 if error.
@@ -101,14 +102,10 @@ extern uint64 sys_unlink(void);
 extern uint64 sys_link(void);
 extern uint64 sys_mkdir(void);
 extern uint64 sys_close(void);
-<<<<<<< HEAD
-extern uint64 sys_setfilter(void);
-extern uint64 sys_getfilter(void);
-=======
 extern uint64 sys_hello(void);
 extern uint64 sys_setfilter(void); // set syscall filter
 extern uint64 sys_getfilter(void); // get syscall filter
->>>>>>> origin/dev1/kernel-internals
+extern uint64 sys_setfilter_child(void);
 // An array mapping syscall numbers from syscall.h
 // to the function that handles the system call.
 static uint64 (*syscalls[])(void) = {
@@ -133,15 +130,11 @@ static uint64 (*syscalls[])(void) = {
 [SYS_link]    sys_link,
 [SYS_mkdir]   sys_mkdir,
 [SYS_close]   sys_close,
-<<<<<<< HEAD
-[SYS_setfilter] sys_setfilter,
-[SYS_getfilter] sys_getfilter,
-=======
 [SYS_hello]   sys_hello,
 [SYS_setfilter] sys_setfilter, // set syscall filter
 [SYS_getfilter] sys_getfilter, // get syscall filter
+[SYS_setfilter_child] sys_setfilter_child,
 
->>>>>>> origin/dev1/kernel-internals
 };
 
 
@@ -153,24 +146,6 @@ syscall(void)
 
   num = p->trapframe->a7;
   if(num > 0 && num < NELEM(syscalls) && syscalls[num]) {
-<<<<<<< HEAD
-    
-    // Kiểm tra mask
-    if(p->mask > 0 && !(p->mask & (1ULL << num))) {
-      
-      // Chặn mọi thứ TRỪ những cái sống còn
-      // SYS_exit (2) và SYS_setfilter (22) là bắt buộc phải thả
-      if(num != SYS_exit && num != SYS_setfilter) {
-        
-        // TẠM THỜI XÓA DÒNG PRINTF Ở ĐÂY ĐỂ HẾT LẶP
-        // printf("Sandboxing: syscall %d bi chan!\n", num); 
-        
-        p->trapframe->a0 = -1; 
-        return;
-      }
-    }
-
-=======
     // Use num to lookup the system call function for num, call it,
     // and store its return value in p->trapframe->a0
     // ============ SYSCALL INTERCEPTION LOGIC ============
@@ -182,7 +157,6 @@ syscall(void)
       return;
     }
     // =====================================================
->>>>>>> origin/dev1/kernel-internals
     p->trapframe->a0 = syscalls[num]();
   }
 }

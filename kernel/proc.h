@@ -106,4 +106,5 @@ struct proc {
   uint64 syscall_mask;         // Mask used for system call filter
   char name[16];               // Process name (debugging)
   uint64 mask;
+  uint64 child_syscall_mask; // Mask sẽ áp dụng cho con khi fork()
 };

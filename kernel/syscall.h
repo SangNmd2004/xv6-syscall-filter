@@ -20,11 +20,7 @@
 #define SYS_link   19
 #define SYS_mkdir  20
 #define SYS_close  21
-<<<<<<< HEAD
-#define SYS_setfilter 22
-#define SYS_getfilter 23
-=======
 #define SYS_hello 22
 #define SYS_setfilter 23 // set syscall filter
 #define SYS_getfilter 24 // get syscall filter
->>>>>>> origin/dev1/kernel-internals
+#define SYS_setfilter_child 25
