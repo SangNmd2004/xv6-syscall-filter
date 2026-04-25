@@ -102,6 +102,8 @@ extern uint64 sys_link(void);
 extern uint64 sys_mkdir(void);
 extern uint64 sys_close(void);
 extern uint64 sys_hello(void);
+extern uint64 sys_setfilter(void); // set syscall filter
+extern uint64 sys_getfilter(void); // get syscall filter
 // An array mapping syscall numbers from syscall.h
 // to the function that handles the system call.
 static uint64 (*syscalls[])(void) = {
@@ -127,6 +129,9 @@ static uint64 (*syscalls[])(void) = {
 [SYS_mkdir]   sys_mkdir,
 [SYS_close]   sys_close,
 [SYS_hello]   sys_hello,
+[SYS_setfilter] sys_setfilter, // set syscall filter
+[SYS_getfilter] sys_getfilter, // get syscall filter
+
 };
 
 void
