@@ -150,6 +150,7 @@ UPROGS=\
 		$U/_filtertest\
 		$U/_filter_demo\
 		$U/_test_child\
+		$U/_test_exec\
 
 fs.img: mkfs/mkfs README $(UPROGS)
 	mkfs/mkfs fs.img README $(UPROGS)

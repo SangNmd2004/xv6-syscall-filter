@@ -120,7 +120,7 @@ sys_setfilter(void)
   argaddr(0, &mask); 
   
   struct proc *p = myproc();
-  p->mask = mask;
+  p->syscall_mask = mask;
   
   return 0;
 }

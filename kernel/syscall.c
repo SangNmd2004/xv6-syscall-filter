@@ -144,19 +144,27 @@ syscall(void)
   int num;
   struct proc *p = myproc();
 
-  num = p->trapframe->a7;
+  num = p->trapframe->a7; // Lấy số hiệu syscall (ví dụ: SYS_write là 16)
+  
   if(num > 0 && num < NELEM(syscalls) && syscalls[num]) {
-    // Use num to lookup the system call function for num, call it,
-    // and store its return value in p->trapframe->a0
-    // ============ SYSCALL INTERCEPTION LOGIC ============
-    // check if syscall is blocked 
-    if(p->syscall_mask & (1L << num)) {
-      // syscall is blocked: print message and return -1
-      printf("%d %s: syscall %d blocked\n", p->pid, p->name, num);
-      p->trapframe->a0 = -1;
-      return;
+    
+    // --- ĐÂY LÀ ĐOẠN LOGIC CHẶN ---
+    // Kiểm tra xem bit thứ 'num' trong syscall_mask có đang bật không
+   if(p->syscall_mask & ((uint64)1 << num)) {
+      p->trapframe->a0 = -1; 
+      
+      // (Tùy chọn) In thông báo ra màn hình Kernel để dễ debug
+      // printf("Tien trinh %d (%s): Syscall %d bi chan boi Sandbox!\n", p->pid, p->name, num);
+      
+      return; // Kết thúc luôn, không chạy hàm thực thi syscalls[num]() nữa
     }
-    // =====================================================
+    // ------------------------------
+
+    // Nếu không bị chặn, tiến hành thực thi bình thường
     p->trapframe->a0 = syscalls[num]();
+  } else {
+    printf("%d %s: unknown sys call %d\n",
+            p->pid, p->name, num);
+    p->trapframe->a0 = -1;
   }
 }
