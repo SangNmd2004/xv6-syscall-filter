@@ -145,13 +145,12 @@ UPROGS=\
 	$U/_logstress\
 	$U/_forphan\
 	$U/_dorphan\
-	$U/_hello\
-		$U/_syscalltest\
-		$U/_filtertest\
-		$U/_filter_demo\
-		$U/_test_child\
-		$U/_test_exec\
-
+	$U/_filtertest\
+	$U/_syscalltest\
+	$U/_k28_test\
+	$U/_full_test\
+    $U/_hello
+	
 fs.img: mkfs/mkfs README $(UPROGS)
 	mkfs/mkfs fs.img README $(UPROGS)
 

@@ -103,6 +103,9 @@ extern uint64 sys_link(void);
 extern uint64 sys_mkdir(void);
 extern uint64 sys_close(void);
 extern uint64 sys_hello(void);
+extern uint64 sys_setfilter(void);
+extern uint64 sys_getfilter(void);
+
 extern uint64 sys_setfilter(void); // set syscall filter
 extern uint64 sys_getfilter(void); // get syscall filter
 extern uint64 sys_setfilter_child(void);
@@ -131,38 +134,73 @@ static uint64 (*syscalls[])(void) = {
 [SYS_mkdir]   sys_mkdir,
 [SYS_close]   sys_close,
 [SYS_hello]   sys_hello,
+[SYS_setfilter] sys_setfilter,
+[SYS_getfilter] sys_getfilter,
+
+
+
+
+// Trong kernel/syscall.c
 [SYS_setfilter] sys_setfilter, // set syscall filter
 [SYS_getfilter] sys_getfilter, // get syscall filter
 [SYS_setfilter_child] sys_setfilter_child,
 
+
+
+// Trong kernel/syscall.c
+[SYS_setfilter] sys_setfilter, // set syscall filter
+[SYS_getfilter] sys_getfilter, // get syscall filter
+[SYS_setfilter_child] sys_setfilter_child,
+
+
+
+// Trong kernel/syscall.c
+[SYS_setfilter] sys_setfilter, // set syscall filter
+[SYS_getfilter] sys_getfilter, // get syscall filter
+[SYS_setfilter_child] sys_setfilter_child,
+
+
+
+// Trong kernel/syscall.c
+[SYS_setfilter] sys_setfilter, // set syscall filter
+[SYS_getfilter] sys_getfilter, // get syscall filter
+[SYS_setfilter_child] sys_setfilter_child,
+
+
+
+// Trong kernel/syscall.c
+[SYS_setfilter] sys_setfilter, // set syscall filter
+[SYS_getfilter] sys_getfilter, // get syscall filter
+[SYS_setfilter_child] sys_setfilter_child,
+
+
+
 };
 
 
-void
+void 
 syscall(void)
 {
   int num;
   struct proc *p = myproc();
 
-  num = p->trapframe->a7; // Lấy số hiệu syscall (ví dụ: SYS_write là 16)
+  num = p->trapframe->a7;
   
   if(num > 0 && num < NELEM(syscalls) && syscalls[num]) {
     
-    // --- ĐÂY LÀ ĐOẠN LOGIC CHẶN ---
-    // Kiểm tra xem bit thứ 'num' trong syscall_mask có đang bật không
-   if(p->syscall_mask & ((uint64)1 << num)) {
-      p->trapframe->a0 = -1; 
-      
-      // (Tùy chọn) In thông báo ra màn hình Kernel để dễ debug
-      // printf("Tien trinh %d (%s): Syscall %d bi chan boi Sandbox!\n", p->pid, p->name, num);
-      
-      return; // Kết thúc luôn, không chạy hàm thực thi syscalls[num]() nữa
+    // --- ĐÂY LÀ LOGIC CHẶN CỦA DEV 3 ---
+    // Kiểm tra nếu bit tương ứng với syscall 'num' trong syscall_mask đang bật
+    if((p->syscall_mask & ((uint64)1 << num)) != 0) {
+      // Nếu bị chặn, trả về -1 và kết thúc hàm ngay lập tức
+      p->trapframe->a0 = -1;
+      return; 
     }
-    // ------------------------------
+    // ----------------------------------
 
-    // Nếu không bị chặn, tiến hành thực thi bình thường
+    // Nếu không bị chặn, mới cho phép thực thi syscall
     p->trapframe->a0 = syscalls[num]();
   } else {
-    // ...
+    printf("%d %s: unknown syscall %d\n", p->pid, p->name, num);
+    p->trapframe->a0 = -1;
   }
 }
