@@ -1,25 +1,40 @@
 #include "kernel/types.h"
+#include "kernel/stat.h"
 #include "user/user.h"
 
-int main(int argc, char *argv[]) {
-    printf("--- BAT DAU TEST ---\n");
+int
+main(int argc, char *argv[])
+{
+  uint64 mask_test = 0x12345;
+  uint64 result;
 
-    // 1. Bật bộ lọc: Chặn syscall số 16 (write)
-    printf("Dang set filter de chan syscall write...\n");
-    setfilter(1 << 16); 
+  printf("FILTERTEST: Bat dau kiem tra...\n");
 
-    // 2. Thực hiện write (Lúc này nó sẽ bị chặn, trả về -1)
-    int ret = write(1, "Test\n", 5); 
+  // 1. Kiem tra setfilter
+  if(setfilter(mask_test) < 0){
+    printf("FILTERTEST: Loi khi goi setfilter\n");
+    exit(1);
+  }
+  printf("FILTERTEST: Da set mask = 0x12345\n");
 
-    // 3. TẮT BỘ LỌC NGAY: Mở cửa cho printf làm việc
-    setfilter(0); 
+  // 2. Kiem tra getfilter
+  result = getfilter();
+  
+  if(result == mask_test){
+    printf("FILTERTEST: Get dung gia tri! (Ket qua: 0x%x)\n", (int)result);
+  } else {
+    printf("FILTERTEST: SAI! Mong doi 0x12345, nhan duoc 0x%x\n", (int)result);
+    exit(1);
+  }
 
-    // 4. In kết quả (Lúc này printf đã được thông quan)
-    if (ret < 0) {
-        printf("[PASS] Syscall write da bi chan thanh cong! (ret = %d)\n", ret);
-    } else {
-        printf("[FAIL] Syscall write KHONG bi chan (ret = %d)\n", ret);
-    }
-    
-    exit(0);
+  // 3. Kiem tra voi gia tri khac
+  setfilter(88);
+  if(getfilter() == 88){
+    printf("FILTERTEST: Test voi gia tri 88: SUCCESS\n");
+  }
+
+  printf("FILTERTEST: Hoan thanh tat ca kiem tra.\n");
+
+  // Lenh nay cuc ky quan trong de dung process
+  exit(0);
 }

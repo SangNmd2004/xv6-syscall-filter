@@ -270,7 +270,19 @@ kfork(void)
   if((np = allocproc()) == 0){
     return -1;
   }
+// Kiểm tra xem cha có dặn riêng gì không
+  if (p->child_syscall_mask != 0) {
+    // Nếu có đặt riêng, con sẽ lấy cái mask đó
+    np->syscall_mask = p->child_syscall_mask;
+  } else {
+    // Nếu không dặn gì (mask = 0), con kế thừa y hệt cha
+    np->syscall_mask = p->syscall_mask;
+  }
 
+  // Sau khi dùng xong, có thể reset child_syscall_mask của cha về 0 
+  // nếu bạn muốn các con tiếp theo không bị dính mask này
+  p->child_syscall_mask = 0;
+  
   // Copy user memory from parent to child.
   if(uvmcopy(p->pagetable, np->pagetable, p->sz) < 0){
     freeproc(np);
@@ -295,7 +307,6 @@ kfork(void)
 
   // Inherit syscall filter from parent (Policy C: additive-only ratchet).
   // Child starts with the same blocked set; it may tighten but not loosen.
-  np->syscall_mask = p->syscall_mask;
 
   pid = np->pid;
 

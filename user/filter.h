@@ -37,6 +37,8 @@
 // ── Miscellaneous ────────────────────────────────────────────────────────────
 #define FILTER_UPTIME    BLOCK(SYS_uptime)  // block uptime()
 #define FILTER_HELLO     BLOCK(SYS_hello)   // block hello()
+#define FILTER_SETFILTER BLOCK(SYS_setfilter)
+#define FILTER_GETFILTER BLOCK(SYS_getfilter)
 
 // ── Compound helpers ─────────────────────────────────────────────────────────
 // Block ALL I/O-related syscalls at once

@@ -23,3 +23,4 @@
 #define SYS_hello 22
 #define SYS_setfilter 23 // set syscall filter
 #define SYS_getfilter 24 // get syscall filter
+#define SYS_setfilter_child 25
