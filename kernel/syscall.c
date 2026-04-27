@@ -103,9 +103,8 @@ extern uint64 sys_link(void);
 extern uint64 sys_mkdir(void);
 extern uint64 sys_close(void);
 extern uint64 sys_hello(void);
-extern uint64 sys_setfilter(void);
-extern uint64 sys_getfilter(void);
-
+extern uint64 sys_setfilter(void); // set syscall filter
+extern uint64 sys_getfilter(void); // get syscall filter
 // An array mapping syscall numbers from syscall.h
 // to the function that handles the system call.
 static uint64 (*syscalls[])(void) = {
@@ -131,9 +130,8 @@ static uint64 (*syscalls[])(void) = {
 [SYS_mkdir]   sys_mkdir,
 [SYS_close]   sys_close,
 [SYS_hello]   sys_hello,
-[SYS_setfilter] sys_setfilter,
-[SYS_getfilter] sys_getfilter,
-
+[SYS_setfilter] sys_setfilter, // set syscall filter
+[SYS_getfilter] sys_getfilter, // get syscall filter
 
 };
 
@@ -147,13 +145,17 @@ syscall(void)
   num = p->trapframe->a7;
   //printf("DEBUG: Syscall dang duoc goi co so hieu la: %d\n", num);
   if(num > 0 && num < NELEM(syscalls) && syscalls[num]) {
-    
-    // Kiểm tra xem bit thứ num có được bật trong syscall_mask không
-    if((p->syscall_mask >> num) & 1) {
-      p->trapframe->a0 = -1; // Trả về lỗi nếu bị chặn
+    // Use num to lookup the system call function for num, call it,
+    // and store its return value in p->trapframe->a0
+    // ============ SYSCALL INTERCEPTION LOGIC ============
+    // check if syscall is blocked 
+    if(p->syscall_mask & (1L << num)) {
+      // syscall is blocked: print message and return -1
+      printf("%d %s: syscall %d blocked\n", p->pid, p->name, num);
+      p->trapframe->a0 = -1;
       return;
     }
-
+    // =====================================================
     p->trapframe->a0 = syscalls[num]();
   } else {
     // ...

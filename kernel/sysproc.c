@@ -114,25 +114,35 @@ sys_hello(void)
   printf("kernel: hello() called by pid %d\n", p->pid);
   return 0;
 }
-// [DEV 3 TỰ THÊM ĐỂ TEST - SẼ XÓA KHI DUY PUSH CODE THẬT]
-uint64
-sys_getfilter(void)
-{
-  uint64 mask = myproc()->syscall_mask;
-  printf("DEBUG: Kernel tra ve mask = %d\n", (int)mask);
-  return mask;
-}
-
+// set syscall filter
+// Security Policy C – Additive-only ratchet:
+//   A process may only SET bits (block more syscalls).
+//   It can never CLEAR a bit that is already set (inherited or self-set).
+//   This prevents a child from escaping a sandbox established by its parent.
 uint64
 sys_setfilter(void)
 {
   uint64 mask;
-  // Lấy tham số mask từ user space
-  if(argaddr(0, &mask) < 0)
+  struct proc *p = myproc();
+
+  argaddr(0, &mask);
+
+  // Enforce the ratchet: every bit that is currently blocked must
+  // remain blocked in the new mask.
+  // Equivalent to: new_mask must be a superset of current_mask.
+  if((mask & p->syscall_mask) != p->syscall_mask) {
+    // Attempted to unblock a previously blocked syscall → deny.
     return -1;
-  
-  // Gán mask vào struct proc
-  myproc()->syscall_mask = mask;
-  
+  }
+
+  p->syscall_mask = mask;
   return 0;
 }
+
+// get syscall filter
+uint64
+sys_getfilter(void)
+{
+  return myproc()->syscall_mask;  // return mask for current process
+}
+

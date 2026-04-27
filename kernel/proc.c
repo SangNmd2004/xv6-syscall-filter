@@ -293,6 +293,10 @@ kfork(void)
 
   safestrcpy(np->name, p->name, sizeof(p->name));
 
+  // Inherit syscall filter from parent (Policy C: additive-only ratchet).
+  // Child starts with the same blocked set; it may tighten but not loosen.
+  np->syscall_mask = p->syscall_mask;
+
   pid = np->pid;
 
   release(&np->lock);
