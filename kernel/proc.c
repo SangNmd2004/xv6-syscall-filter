@@ -146,6 +146,7 @@ found:
   memset(&p->context, 0, sizeof(p->context));
   p->context.ra = (uint64)forkret;
   p->context.sp = p->kstack + PGSIZE;
+  p->syscall_mask = 0; // Đặt khiên mặc định về 0
 
   return p;
 }
