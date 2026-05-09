@@ -144,23 +144,21 @@ syscall(void)
   int num;
   struct proc *p = myproc();
 
-  num = p->trapframe->a7; // Lấy số hiệu syscall (ví dụ: SYS_write là 16)
-  
-  if(num > 0 && num < NELEM(syscalls) && syscalls[num]) {
-    
-    // --- ĐÂY LÀ ĐOẠN LOGIC CHẶN ---
-    // Kiểm tra xem bit thứ 'num' trong syscall_mask có đang bật không
-   if(p->syscall_mask & ((uint64)1 << num)) {
-      p->trapframe->a0 = -1; 
-      
-      // (Tùy chọn) In thông báo ra màn hình Kernel để dễ debug
-      // printf("Tien trinh %d (%s): Syscall %d bi chan boi Sandbox!\n", p->pid, p->name, num);
-      
-      return; // Kết thúc luôn, không chạy hàm thực thi syscalls[num]() nữa
-    }
-    // ------------------------------
+  num = p->trapframe->a7; // Lấy mã số syscall từ thanh ghi a7
 
-    // Nếu không bị chặn, tiến hành thực thi bình thường
+  // 1. KIỂM TRA MASK (Sandbox)
+  // Kiểm tra nếu bit tương ứng với syscall 'num' không được bật trong mask
+  if(num > 0 && !(p->syscall_mask & (1 << num))) {
+    printf("[Kernel] Sandbox: Process %d (%s) tried forbidden syscall %d\n", 
+           p->pid, p->name, num);
+    p->trapframe->a0 = -1; // Trả về lỗi
+    setkilled(p);          // Tiêu diệt tiến trình vi phạm
+    return;
+  }
+
+  // 2. THỰC THI SYSCALL (Nguyên bản của xv6 nhưng dùng NELEM)
+  // Kiểm tra num có nằm trong phạm vi mảng syscalls hay không
+  if(num > 0 && num < NELEM(syscalls) && syscalls[num]) {
     p->trapframe->a0 = syscalls[num]();
   } else {
     printf("%d %s: unknown sys call %d\n",
