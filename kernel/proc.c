@@ -124,7 +124,7 @@ allocproc(void)
 found:
   p->pid = allocpid();
   p->state = USED;
-  p->syscall_mask = 0;
+  p->syscall_mask = 0xffffffff;
 
   // Allocate a trapframe page.
   if((p->trapframe = (struct trapframe *)kalloc()) == 0){

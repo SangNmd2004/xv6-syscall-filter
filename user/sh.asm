@@ -23,6 +23,7 @@ getcmd(char *buf, int nbuf)
       10:	4609                	li	a2,2
       12:	00001597          	auipc	a1,0x1
       16:	20e58593          	addi	a1,a1,526 # 1220 <malloc+0xfe>
+      16:	31e58593          	addi	a1,a1,798 # 1330 <filter_debug_status+0x9a>
       1a:	4509                	li	a0,2
       1c:	433000ef          	jal	c4e <write>
   memset(buf, 0, nbuf);
@@ -63,6 +64,7 @@ panic(char *s)
   fprintf(2, "%s\n", s);
       54:	00001597          	auipc	a1,0x1
       58:	1dc58593          	addi	a1,a1,476 # 1230 <malloc+0x10e>
+      58:	44c58593          	addi	a1,a1,1100 # 14a0 <filter_debug_status+0x20a>
       5c:	4509                	li	a0,2
       5e:	7e7000ef          	jal	1044 <fprintf>
   exit(1);
@@ -96,6 +98,7 @@ fork1(void)
     panic("fork");
       82:	00001517          	auipc	a0,0x1
       86:	1b650513          	addi	a0,a0,438 # 1238 <malloc+0x116>
+      86:	2b650513          	addi	a0,a0,694 # 1338 <filter_debug_status+0xa2>
       8a:	fc1ff0ef          	jal	4a <panic>
 
 000000000000008e <runcmd>:
@@ -116,6 +119,7 @@ fork1(void)
       a8:	078a                	slli	a5,a5,0x2
       aa:	00001717          	auipc	a4,0x1
       ae:	28e70713          	addi	a4,a4,654 # 1338 <malloc+0x216>
+      ae:	44a70713          	addi	a4,a4,1098 # 14f4 <filter_debug_status+0x25e>
       b2:	97ba                	add	a5,a5,a4
       b4:	439c                	lw	a5,0(a5)
       b6:	97ba                	add	a5,a5,a4
@@ -127,6 +131,7 @@ fork1(void)
     panic("runcmd");
       c2:	00001517          	auipc	a0,0x1
       c6:	17e50513          	addi	a0,a0,382 # 1240 <malloc+0x11e>
+      c6:	27e50513          	addi	a0,a0,638 # 1340 <filter_debug_status+0xaa>
       ca:	f81ff0ef          	jal	4a <panic>
     if(ecmd->argv[0] == 0)
       ce:	6508                	ld	a0,8(a0)
@@ -138,6 +143,7 @@ fork1(void)
       da:	6490                	ld	a2,8(s1)
       dc:	00001597          	auipc	a1,0x1
       e0:	16c58593          	addi	a1,a1,364 # 1248 <malloc+0x126>
+      e0:	26c58593          	addi	a1,a1,620 # 1348 <filter_debug_status+0xb2>
       e4:	4509                	li	a0,2
       e6:	75f000ef          	jal	1044 <fprintf>
   exit(0);
@@ -161,6 +167,7 @@ fork1(void)
      10e:	6890                	ld	a2,16(s1)
      110:	00001597          	auipc	a1,0x1
      114:	14858593          	addi	a1,a1,328 # 1258 <malloc+0x136>
+     114:	24858593          	addi	a1,a1,584 # 1358 <filter_debug_status+0xc2>
      118:	4509                	li	a0,2
      11a:	72b000ef          	jal	1044 <fprintf>
       exit(1);
@@ -203,6 +210,7 @@ fork1(void)
       panic("pipe");
      172:	00001517          	auipc	a0,0x1
      176:	0f650513          	addi	a0,a0,246 # 1268 <malloc+0x146>
+     176:	1f650513          	addi	a0,a0,502 # 1368 <filter_debug_status+0xd2>
      17a:	ed1ff0ef          	jal	4a <panic>
     if(fork1() == 0){
      17e:	eebff0ef          	jal	68 <fork1>
@@ -697,6 +705,7 @@ parseredirs(struct cmd *cmd, char **ps, char *es)
   while(peek(ps, es, "<>")){
      4cc:	00001a97          	auipc	s5,0x1
      4d0:	dc4a8a93          	addi	s5,s5,-572 # 1290 <malloc+0x16e>
+     4d0:	ec4a8a93          	addi	s5,s5,-316 # 1390 <filter_debug_status+0xfa>
     tok = gettoken(ps, es, 0, 0);
     if(gettoken(ps, es, &q, &eq) != 'a')
      4d4:	06100b13          	li	s6,97
@@ -708,6 +717,7 @@ parseredirs(struct cmd *cmd, char **ps, char *es)
       panic("missing file for redirection");
      4de:	00001517          	auipc	a0,0x1
      4e2:	d9250513          	addi	a0,a0,-622 # 1270 <malloc+0x14e>
+     4e2:	e9250513          	addi	a0,a0,-366 # 1370 <filter_debug_status+0xda>
      4e6:	b65ff0ef          	jal	4a <panic>
     case '<':
       cmd = redircmd(cmd, q, eq, O_RDONLY, 0);
@@ -810,6 +820,7 @@ parseexec(char **ps, char *es)
   if(peek(ps, es, "("))
      59a:	00001617          	auipc	a2,0x1
      59e:	cfe60613          	addi	a2,a2,-770 # 1298 <malloc+0x176>
+     59e:	dfe60613          	addi	a2,a2,-514 # 1398 <filter_debug_status+0x102>
      5a2:	eabff0ef          	jal	44c <peek>
      5a6:	e915                	bnez	a0,5da <parseexec+0x52>
      5a8:	e8ca                	sd	s2,80(sp)
@@ -836,6 +847,7 @@ parseexec(char **ps, char *es)
      5c6:	008c0913          	addi	s2,s8,8
      5ca:	00001b17          	auipc	s6,0x1
      5ce:	ceeb0b13          	addi	s6,s6,-786 # 12b8 <malloc+0x196>
+     5ce:	deeb0b13          	addi	s6,s6,-530 # 13b8 <filter_debug_status+0x122>
     if((tok=gettoken(ps, es, &q, &eq)) == 0)
       break;
     if(tok != 'a')
@@ -870,6 +882,7 @@ parseexec(char **ps, char *es)
       panic("syntax");
      5f4:	00001517          	auipc	a0,0x1
      5f8:	cac50513          	addi	a0,a0,-852 # 12a0 <malloc+0x17e>
+     5f8:	dac50513          	addi	a0,a0,-596 # 13a0 <filter_debug_status+0x10a>
      5fc:	a4fff0ef          	jal	4a <panic>
     ret = parseredirs(ret, ps, es);
      600:	8656                	mv	a2,s5
@@ -906,6 +919,7 @@ parseexec(char **ps, char *es)
       panic("too many args");
      646:	00001517          	auipc	a0,0x1
      64a:	c6250513          	addi	a0,a0,-926 # 12a8 <malloc+0x186>
+     64a:	d6250513          	addi	a0,a0,-670 # 13a8 <filter_debug_status+0x112>
      64e:	9fdff0ef          	jal	4a <panic>
   cmd->argv[argc] = 0;
      652:	098e                	slli	s3,s3,0x3
@@ -939,6 +953,7 @@ parseexec(char **ps, char *es)
   if(peek(ps, es, "|")){
      684:	00001617          	auipc	a2,0x1
      688:	c3c60613          	addi	a2,a2,-964 # 12c0 <malloc+0x19e>
+     688:	d3c60613          	addi	a2,a2,-708 # 13c0 <filter_debug_status+0x12a>
      68c:	85ce                	mv	a1,s3
      68e:	854a                	mv	a0,s2
      690:	dbdff0ef          	jal	44c <peek>
@@ -987,6 +1002,7 @@ parseexec(char **ps, char *es)
   while(peek(ps, es, "&")){
      6e0:	00001a17          	auipc	s4,0x1
      6e4:	be8a0a13          	addi	s4,s4,-1048 # 12c8 <malloc+0x1a6>
+     6e4:	ce8a0a13          	addi	s4,s4,-792 # 13c8 <filter_debug_status+0x132>
      6e8:	a819                	j	6fe <parseline+0x38>
     gettoken(ps, es, 0, 0);
      6ea:	4681                	li	a3,0
@@ -1007,6 +1023,7 @@ parseexec(char **ps, char *es)
   if(peek(ps, es, ";")){
      70a:	00001617          	auipc	a2,0x1
      70e:	bc660613          	addi	a2,a2,-1082 # 12d0 <malloc+0x1ae>
+     70e:	cc660613          	addi	a2,a2,-826 # 13d0 <filter_debug_status+0x13a>
      712:	85ce                	mv	a1,s3
      714:	854a                	mv	a0,s2
      716:	d37ff0ef          	jal	44c <peek>
@@ -1052,6 +1069,7 @@ parseexec(char **ps, char *es)
   if(!peek(ps, es, "("))
      760:	00001617          	auipc	a2,0x1
      764:	b3860613          	addi	a2,a2,-1224 # 1298 <malloc+0x176>
+     764:	c3860613          	addi	a2,a2,-968 # 1398 <filter_debug_status+0x102>
      768:	ce5ff0ef          	jal	44c <peek>
      76c:	c539                	beqz	a0,7ba <parseblock+0x6c>
   gettoken(ps, es, 0, 0);
@@ -1068,6 +1086,7 @@ parseexec(char **ps, char *es)
   if(!peek(ps, es, ")"))
      784:	00001617          	auipc	a2,0x1
      788:	b6460613          	addi	a2,a2,-1180 # 12e8 <malloc+0x1c6>
+     788:	cd460613          	addi	a2,a2,-812 # 1458 <filter_debug_status+0x1c2>
      78c:	85ca                	mv	a1,s2
      78e:	8526                	mv	a0,s1
      790:	cbdff0ef          	jal	44c <peek>
@@ -1098,6 +1117,11 @@ parseexec(char **ps, char *es)
     panic("syntax - missing )");
      7c6:	00001517          	auipc	a0,0x1
      7ca:	b2a50513          	addi	a0,a0,-1238 # 12f0 <malloc+0x1ce>
+     7be:	c1e50513          	addi	a0,a0,-994 # 13d8 <filter_debug_status+0x142>
+     7c2:	889ff0ef          	jal	4a <panic>
+    panic("syntax - missing )");
+     7c6:	00001517          	auipc	a0,0x1
+     7ca:	c2250513          	addi	a0,a0,-990 # 13e8 <filter_debug_status+0x152>
      7ce:	87dff0ef          	jal	4a <panic>
 
 00000000000007d2 <nulterminate>:
@@ -1129,6 +1153,7 @@ nulterminate(struct cmd *cmd)
      7ec:	078a                	slli	a5,a5,0x2
      7ee:	00001717          	auipc	a4,0x1
      7f2:	b6270713          	addi	a4,a4,-1182 # 1350 <malloc+0x22e>
+     7f2:	d1e70713          	addi	a4,a4,-738 # 150c <filter_debug_status+0x276>
      7f6:	97ba                	add	a5,a5,a4
      7f8:	439c                	lw	a5,0(a5)
      7fa:	97ba                	add	a5,a5,a4
@@ -1214,6 +1239,7 @@ nulterminate(struct cmd *cmd)
   peek(&s, es, "");
      87a:	00001617          	auipc	a2,0x1
      87e:	9ae60613          	addi	a2,a2,-1618 # 1228 <malloc+0x106>
+     87e:	bc660613          	addi	a2,a2,-1082 # 1440 <filter_debug_status+0x1aa>
      882:	85a6                	mv	a1,s1
      884:	fd840513          	addi	a0,s0,-40
      888:	bc5ff0ef          	jal	44c <peek>
@@ -1234,11 +1260,13 @@ nulterminate(struct cmd *cmd)
     fprintf(2, "leftovers: %s\n", s);
      8a8:	00001597          	auipc	a1,0x1
      8ac:	a6058593          	addi	a1,a1,-1440 # 1308 <malloc+0x1e6>
+     8ac:	b5858593          	addi	a1,a1,-1192 # 1400 <filter_debug_status+0x16a>
      8b0:	4509                	li	a0,2
      8b2:	792000ef          	jal	1044 <fprintf>
     panic("syntax");
      8b6:	00001517          	auipc	a0,0x1
      8ba:	9ea50513          	addi	a0,a0,-1558 # 12a0 <malloc+0x17e>
+     8ba:	aea50513          	addi	a0,a0,-1302 # 13a0 <filter_debug_status+0x10a>
      8be:	f8cff0ef          	jal	4a <panic>
 
 00000000000008c2 <main>:
@@ -1256,6 +1284,7 @@ nulterminate(struct cmd *cmd)
   while((fd = open("console", O_RDWR)) >= 0){
      8d6:	00001497          	auipc	s1,0x1
      8da:	a4248493          	addi	s1,s1,-1470 # 1318 <malloc+0x1f6>
+     8da:	b3a48493          	addi	s1,s1,-1222 # 1410 <filter_debug_status+0x17a>
      8de:	4589                	li	a1,2
      8e0:	8526                	mv	a0,s1
      8e2:	38c000ef          	jal	c6e <open>
@@ -1324,6 +1353,7 @@ nulterminate(struct cmd *cmd)
      978:	8626                	mv	a2,s1
      97a:	00001597          	auipc	a1,0x1
      97e:	9a658593          	addi	a1,a1,-1626 # 1320 <malloc+0x1fe>
+     97e:	a9e58593          	addi	a1,a1,-1378 # 1418 <filter_debug_status+0x182>
      982:	4509                	li	a0,2
      984:	6c0000ef          	jal	1044 <fprintf>
      988:	bf45                	j	938 <main+0x76>
@@ -2097,6 +2127,8 @@ printint(int fd, long long xx, int base, int sgn)
     buf[i++] = digits[x % base];
      d1e:	00000517          	auipc	a0,0x0
      d22:	64a50513          	addi	a0,a0,1610 # 1368 <digits>
+     d1e:	00001517          	auipc	a0,0x1
+     d22:	80a50513          	addi	a0,a0,-2038 # 1528 <digits>
      d26:	883e                	mv	a6,a5
      d28:	2785                	addiw	a5,a5,1
      d2a:	02c5f733          	remu	a4,a1,a2
@@ -2459,6 +2491,7 @@ vprintf(int fd, const char *fmt, va_list ap)
     putc(fd, digits[x >> (sizeof(uint64) * 8 - 4)]);
      fb4:	00000b97          	auipc	s7,0x0
      fb8:	3b4b8b93          	addi	s7,s7,948 # 1368 <digits>
+     fb8:	574b8b93          	addi	s7,s7,1396 # 1528 <digits>
      fbc:	03c9d793          	srli	a5,s3,0x3c
      fc0:	97de                	add	a5,a5,s7
      fc2:	0007c583          	lbu	a1,0(a5)
@@ -2505,6 +2538,7 @@ vprintf(int fd, const char *fmt, va_list ap)
           s = "(null)";
     1016:	00000917          	auipc	s2,0x0
     101a:	31a90913          	addi	s2,s2,794 # 1330 <malloc+0x20e>
+    101a:	41290913          	addi	s2,s2,1042 # 1428 <filter_debug_status+0x192>
         for(; *s; s++)
     101e:	02800593          	li	a1,40
     1022:	b7c5                	j	1002 <vprintf+0x262>
@@ -2807,3 +2841,148 @@ malloc(uint nbytes)
     1214:	6aa2                	ld	s5,8(sp)
     1216:	6b02                	ld	s6,0(sp)
     1218:	b7f5                	j	1204 <malloc+0xe2>
+
+000000000000121a <filter_apply>:
+#include "kernel/types.h"
+#include "user/user.h"
+#include "user/filter.h"
+
+int filter_apply(long blacklist_mask) {
+    121a:	1141                	addi	sp,sp,-16
+    121c:	e406                	sd	ra,8(sp)
+    121e:	e022                	sd	s0,0(sp)
+    1220:	0800                	addi	s0,sp,16
+    // Vì kernel của bạn đang dùng Whitelist (1 là cho phép), 
+    // nhưng API này dùng Blacklist (1 là chặn), chúng ta cần đảo bit.
+    return setfilter(~blacklist_mask);
+    1222:	fff54513          	not	a0,a0
+    1226:	aa9ff0ef          	jal	cce <setfilter>
+}
+    122a:	60a2                	ld	ra,8(sp)
+    122c:	6402                	ld	s0,0(sp)
+    122e:	0141                	addi	sp,sp,16
+    1230:	8082                	ret
+
+0000000000001232 <filter_block_syscall>:
+
+int filter_block_syscall(int sys_num) {
+    1232:	1101                	addi	sp,sp,-32
+    1234:	ec06                	sd	ra,24(sp)
+    1236:	e822                	sd	s0,16(sp)
+    1238:	e426                	sd	s1,8(sp)
+    123a:	1000                	addi	s0,sp,32
+    123c:	84aa                	mv	s1,a0
+    long current_mask = getfilter();
+    123e:	a99ff0ef          	jal	cd6 <getfilter>
+    // Tắt bit tương ứng với syscall đó trong whitelist
+    return setfilter(current_mask & ~BLOCK(sys_num));
+    1242:	4785                	li	a5,1
+    1244:	009797b3          	sll	a5,a5,s1
+    1248:	fff7c793          	not	a5,a5
+    124c:	8d7d                	and	a0,a0,a5
+    124e:	a81ff0ef          	jal	cce <setfilter>
+}
+    1252:	60e2                	ld	ra,24(sp)
+    1254:	6442                	ld	s0,16(sp)
+    1256:	64a2                	ld	s1,8(sp)
+    1258:	6105                	addi	sp,sp,32
+    125a:	8082                	ret
+
+000000000000125c <filter_reset>:
+
+int filter_reset(void) {
+    125c:	1141                	addi	sp,sp,-16
+    125e:	e406                	sd	ra,8(sp)
+    1260:	e022                	sd	s0,0(sp)
+    1262:	0800                	addi	s0,sp,16
+    return setfilter(0xFFFFFFFFFFFFFFFFL); // Cho phép tất cả
+    1264:	557d                	li	a0,-1
+    1266:	a69ff0ef          	jal	cce <setfilter>
+}
+    126a:	60a2                	ld	ra,8(sp)
+    126c:	6402                	ld	s0,0(sp)
+    126e:	0141                	addi	sp,sp,16
+    1270:	8082                	ret
+
+0000000000001272 <filter_is_blocked>:
+
+int filter_is_blocked(int sys_num) {
+    1272:	1101                	addi	sp,sp,-32
+    1274:	ec06                	sd	ra,24(sp)
+    1276:	e822                	sd	s0,16(sp)
+    1278:	e426                	sd	s1,8(sp)
+    127a:	1000                	addi	s0,sp,32
+    127c:	84aa                	mv	s1,a0
+    long current_mask = getfilter();
+    127e:	a59ff0ef          	jal	cd6 <getfilter>
+    return !(current_mask & BLOCK(sys_num));
+    1282:	40955533          	sra	a0,a0,s1
+    1286:	00154513          	xori	a0,a0,1
+}
+    128a:	8905                	andi	a0,a0,1
+    128c:	60e2                	ld	ra,24(sp)
+    128e:	6442                	ld	s0,16(sp)
+    1290:	64a2                	ld	s1,8(sp)
+    1292:	6105                	addi	sp,sp,32
+    1294:	8082                	ret
+
+0000000000001296 <filter_debug_status>:
+
+void filter_debug_status(void) {
+    1296:	1101                	addi	sp,sp,-32
+    1298:	ec06                	sd	ra,24(sp)
+    129a:	e822                	sd	s0,16(sp)
+    129c:	e426                	sd	s1,8(sp)
+    129e:	1000                	addi	s0,sp,32
+    long m = getfilter();
+    12a0:	a37ff0ef          	jal	cd6 <getfilter>
+    12a4:	84aa                	mv	s1,a0
+    printf("\n[Sandbox Monitor]\n");
+    12a6:	00000517          	auipc	a0,0x0
+    12aa:	1ba50513          	addi	a0,a0,442 # 1460 <filter_debug_status+0x1ca>
+    12ae:	dc1ff0ef          	jal	106e <printf>
+    printf("Whitelist Mask: %ld\n", m);
+    12b2:	85a6                	mv	a1,s1
+    12b4:	00000517          	auipc	a0,0x0
+    12b8:	1c450513          	addi	a0,a0,452 # 1478 <filter_debug_status+0x1e2>
+    12bc:	db3ff0ef          	jal	106e <printf>
+    printf("Security Level: %s\n", (m == 0xFFFFFFFFFFFFFFFFL) ? "LOW (Permissive)" : "HIGH (Restricted)");
+    12c0:	57fd                	li	a5,-1
+    12c2:	00000597          	auipc	a1,0x0
+    12c6:	18658593          	addi	a1,a1,390 # 1448 <filter_debug_status+0x1b2>
+    12ca:	02f48b63          	beq	s1,a5,1300 <filter_debug_status+0x6a>
+    12ce:	00000517          	auipc	a0,0x0
+    12d2:	1c250513          	addi	a0,a0,450 # 1490 <filter_debug_status+0x1fa>
+    12d6:	d99ff0ef          	jal	106e <printf>
+    
+    if(filter_is_blocked(SYS_open)) printf(" - File access: LOCKED\n");
+    12da:	453d                	li	a0,15
+    12dc:	f97ff0ef          	jal	1272 <filter_is_blocked>
+    12e0:	e50d                	bnez	a0,130a <filter_debug_status+0x74>
+    if(filter_is_blocked(SYS_fork)) printf(" - Process creation: LOCKED\n");
+    12e2:	4505                	li	a0,1
+    12e4:	f8fff0ef          	jal	1272 <filter_is_blocked>
+    12e8:	e905                	bnez	a0,1318 <filter_debug_status+0x82>
+    printf("------------------\n");
+    12ea:	00000517          	auipc	a0,0x0
+    12ee:	1f650513          	addi	a0,a0,502 # 14e0 <filter_debug_status+0x24a>
+    12f2:	d7dff0ef          	jal	106e <printf>
+    12f6:	60e2                	ld	ra,24(sp)
+    12f8:	6442                	ld	s0,16(sp)
+    12fa:	64a2                	ld	s1,8(sp)
+    12fc:	6105                	addi	sp,sp,32
+    12fe:	8082                	ret
+    printf("Security Level: %s\n", (m == 0xFFFFFFFFFFFFFFFFL) ? "LOW (Permissive)" : "HIGH (Restricted)");
+    1300:	00000597          	auipc	a1,0x0
+    1304:	13058593          	addi	a1,a1,304 # 1430 <filter_debug_status+0x19a>
+    1308:	b7d9                	j	12ce <filter_debug_status+0x38>
+    if(filter_is_blocked(SYS_open)) printf(" - File access: LOCKED\n");
+    130a:	00000517          	auipc	a0,0x0
+    130e:	19e50513          	addi	a0,a0,414 # 14a8 <filter_debug_status+0x212>
+    1312:	d5dff0ef          	jal	106e <printf>
+    1316:	b7f1                	j	12e2 <filter_debug_status+0x4c>
+    if(filter_is_blocked(SYS_fork)) printf(" - Process creation: LOCKED\n");
+    1318:	00000517          	auipc	a0,0x0
+    131c:	1a850513          	addi	a0,a0,424 # 14c0 <filter_debug_status+0x22a>
+    1320:	d4fff0ef          	jal	106e <printf>
+    1324:	b7d9                	j	12ea <filter_debug_status+0x54>

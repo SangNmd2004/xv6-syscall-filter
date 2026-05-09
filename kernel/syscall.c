@@ -198,6 +198,21 @@ syscall(void)
     // ----------------------------------
 
     // Nếu không bị chặn, mới cho phép thực thi syscall
+  num = p->trapframe->a7; // Lấy mã số syscall từ thanh ghi a7
+
+  // 1. KIỂM TRA MASK (Sandbox)
+  // Kiểm tra nếu bit tương ứng với syscall 'num' không được bật trong mask
+  if(num > 0 && !(p->syscall_mask & (1 << num))) {
+    printf("[Kernel] Sandbox: Process %d (%s) tried forbidden syscall %d\n", 
+           p->pid, p->name, num);
+    p->trapframe->a0 = -1; // Trả về lỗi
+    setkilled(p);          // Tiêu diệt tiến trình vi phạm
+    return;
+  }
+
+  // 2. THỰC THI SYSCALL (Nguyên bản của xv6 nhưng dùng NELEM)
+  // Kiểm tra num có nằm trong phạm vi mảng syscalls hay không
+  if(num > 0 && num < NELEM(syscalls) && syscalls[num]) {
     p->trapframe->a0 = syscalls[num]();
   } else {
     printf("%d %s: unknown syscall %d\n", p->pid, p->name, num);

@@ -52,6 +52,7 @@ main(int argc, char **argv)
   36:	0009b583          	ld	a1,0(s3)
   3a:	00001517          	auipc	a0,0x1
   3e:	95650513          	addi	a0,a0,-1706 # 990 <malloc+0x104>
+  3e:	a5650513          	addi	a0,a0,-1450 # a90 <filter_debug_status+0x90>
   42:	796000ef          	jal	7d8 <printf>
       exit(1);
   46:	4505                	li	a0,1
@@ -76,6 +77,13 @@ main(int argc, char **argv)
         if((n = write(fd, buf, SZ)) != SZ){
   7e:	00001997          	auipc	s3,0x1
   82:	f9298993          	addi	s3,s3,-110 # 1010 <buf>
+  6e:	00002517          	auipc	a0,0x2
+  72:	fa250513          	addi	a0,a0,-94 # 2010 <buf>
+  76:	110000ef          	jal	186 <memset>
+  7a:	0fa00493          	li	s1,250
+        if((n = write(fd, buf, SZ)) != SZ){
+  7e:	00002997          	auipc	s3,0x2
+  82:	f9298993          	addi	s3,s3,-110 # 2010 <buf>
   86:	7d000613          	li	a2,2000
   8a:	85ce                	mv	a1,s3
   8c:	854a                	mv	a0,s2
@@ -93,6 +101,7 @@ main(int argc, char **argv)
   a8:	0009b583          	ld	a1,0(s3)
   ac:	00001517          	auipc	a0,0x1
   b0:	8fc50513          	addi	a0,a0,-1796 # 9a8 <malloc+0x11c>
+  b0:	9fc50513          	addi	a0,a0,-1540 # aa8 <filter_debug_status+0xa8>
   b4:	724000ef          	jal	7d8 <printf>
         exit(1);
   b8:	4505                	li	a0,1
@@ -101,6 +110,7 @@ main(int argc, char **argv)
   be:	85aa                	mv	a1,a0
   c0:	00001517          	auipc	a0,0x1
   c4:	90050513          	addi	a0,a0,-1792 # 9c0 <malloc+0x134>
+  c4:	a0050513          	addi	a0,a0,-1536 # ac0 <filter_debug_status+0xc0>
   c8:	710000ef          	jal	7d8 <printf>
           exit(1);
   cc:	4505                	li	a0,1
@@ -896,6 +906,7 @@ printint(int fd, long long xx, int base, int sgn)
     buf[i++] = digits[x % base];
  488:	00000517          	auipc	a0,0x0
  48c:	55850513          	addi	a0,a0,1368 # 9e0 <digits>
+ 48c:	72050513          	addi	a0,a0,1824 # ba8 <digits>
  490:	883e                	mv	a6,a5
  492:	2785                	addiw	a5,a5,1
  494:	02c5f733          	remu	a4,a1,a2
@@ -1258,6 +1269,7 @@ vprintf(int fd, const char *fmt, va_list ap)
     putc(fd, digits[x >> (sizeof(uint64) * 8 - 4)]);
  71e:	00000b97          	auipc	s7,0x0
  722:	2c2b8b93          	addi	s7,s7,706 # 9e0 <digits>
+ 722:	48ab8b93          	addi	s7,s7,1162 # ba8 <digits>
  726:	03c9d793          	srli	a5,s3,0x3c
  72a:	97de                	add	a5,a5,s7
  72c:	0007c583          	lbu	a1,0(a5)
@@ -1304,6 +1316,7 @@ vprintf(int fd, const char *fmt, va_list ap)
           s = "(null)";
  780:	00000917          	auipc	s2,0x0
  784:	25890913          	addi	s2,s2,600 # 9d8 <malloc+0x14c>
+ 784:	35890913          	addi	s2,s2,856 # ad8 <filter_debug_status+0xd8>
         for(; *s; s++)
  788:	02800593          	li	a1,40
  78c:	b7c5                	j	76c <vprintf+0x262>
@@ -1405,6 +1418,8 @@ free(void *ap)
   for(p = freep; !(bp > p && bp < p->s.ptr); p = p->s.ptr)
  814:	00000797          	auipc	a5,0x0
  818:	7ec7b783          	ld	a5,2028(a5) # 1000 <freep>
+ 814:	00001797          	auipc	a5,0x1
+ 818:	7ec7b783          	ld	a5,2028(a5) # 2000 <freep>
  81c:	a02d                	j	846 <free+0x3c>
     if(p >= p->s.ptr && (bp > p || bp < p->s.ptr))
       break;
@@ -1461,6 +1476,8 @@ free(void *ap)
   freep = p;
  87e:	00000717          	auipc	a4,0x0
  882:	78f73123          	sd	a5,1922(a4) # 1000 <freep>
+ 87e:	00001717          	auipc	a4,0x1
+ 882:	78f73123          	sd	a5,1922(a4) # 2000 <freep>
 }
  886:	6422                	ld	s0,8(sp)
  888:	0141                	addi	sp,sp,16
@@ -1492,6 +1509,8 @@ malloc(uint nbytes)
   if((prevp = freep) == 0){
  8a8:	00000517          	auipc	a0,0x0
  8ac:	75853503          	ld	a0,1880(a0) # 1000 <freep>
+ 8a8:	00001517          	auipc	a0,0x1
+ 8ac:	75853503          	ld	a0,1880(a0) # 2000 <freep>
  8b0:	c915                	beqz	a0,8e4 <malloc+0x58>
     base.s.ptr = freep = prevp = &base;
     base.s.size = 0;
@@ -1522,6 +1541,8 @@ malloc(uint nbytes)
     if(p == freep)
  8d8:	00000917          	auipc	s2,0x0
  8dc:	72890913          	addi	s2,s2,1832 # 1000 <freep>
+ 8d8:	00001917          	auipc	s2,0x1
+ 8dc:	72890913          	addi	s2,s2,1832 # 2000 <freep>
   if(p == SBRK_ERROR)
  8e0:	5afd                	li	s5,-1
  8e2:	a081                	j	922 <malloc+0x96>
@@ -1534,6 +1555,10 @@ malloc(uint nbytes)
  8f0:	91c78793          	addi	a5,a5,-1764 # 1208 <base>
  8f4:	00000717          	auipc	a4,0x0
  8f8:	70f73623          	sd	a5,1804(a4) # 1000 <freep>
+ 8ec:	00002797          	auipc	a5,0x2
+ 8f0:	91c78793          	addi	a5,a5,-1764 # 2208 <base>
+ 8f4:	00001717          	auipc	a4,0x1
+ 8f8:	70f73623          	sd	a5,1804(a4) # 2000 <freep>
  8fc:	e39c                	sd	a5,0(a5)
     base.s.size = 0;
  8fe:	0007a423          	sw	zero,8(a5)
@@ -1591,6 +1616,8 @@ malloc(uint nbytes)
       freep = prevp;
  962:	00000717          	auipc	a4,0x0
  966:	68a73f23          	sd	a0,1694(a4) # 1000 <freep>
+ 962:	00001717          	auipc	a4,0x1
+ 966:	68a73f23          	sd	a0,1694(a4) # 2000 <freep>
       return (void*)(p + 1);
  96a:	01078513          	addi	a0,a5,16
   }
@@ -1606,3 +1633,148 @@ malloc(uint nbytes)
  97e:	6aa2                	ld	s5,8(sp)
  980:	6b02                	ld	s6,0(sp)
  982:	b7f5                	j	96e <malloc+0xe2>
+
+0000000000000984 <filter_apply>:
+#include "kernel/types.h"
+#include "user/user.h"
+#include "user/filter.h"
+
+int filter_apply(long blacklist_mask) {
+ 984:	1141                	addi	sp,sp,-16
+ 986:	e406                	sd	ra,8(sp)
+ 988:	e022                	sd	s0,0(sp)
+ 98a:	0800                	addi	s0,sp,16
+    // Vì kernel của bạn đang dùng Whitelist (1 là cho phép), 
+    // nhưng API này dùng Blacklist (1 là chặn), chúng ta cần đảo bit.
+    return setfilter(~blacklist_mask);
+ 98c:	fff54513          	not	a0,a0
+ 990:	aa9ff0ef          	jal	438 <setfilter>
+}
+ 994:	60a2                	ld	ra,8(sp)
+ 996:	6402                	ld	s0,0(sp)
+ 998:	0141                	addi	sp,sp,16
+ 99a:	8082                	ret
+
+000000000000099c <filter_block_syscall>:
+
+int filter_block_syscall(int sys_num) {
+ 99c:	1101                	addi	sp,sp,-32
+ 99e:	ec06                	sd	ra,24(sp)
+ 9a0:	e822                	sd	s0,16(sp)
+ 9a2:	e426                	sd	s1,8(sp)
+ 9a4:	1000                	addi	s0,sp,32
+ 9a6:	84aa                	mv	s1,a0
+    long current_mask = getfilter();
+ 9a8:	a99ff0ef          	jal	440 <getfilter>
+    // Tắt bit tương ứng với syscall đó trong whitelist
+    return setfilter(current_mask & ~BLOCK(sys_num));
+ 9ac:	4785                	li	a5,1
+ 9ae:	009797b3          	sll	a5,a5,s1
+ 9b2:	fff7c793          	not	a5,a5
+ 9b6:	8d7d                	and	a0,a0,a5
+ 9b8:	a81ff0ef          	jal	438 <setfilter>
+}
+ 9bc:	60e2                	ld	ra,24(sp)
+ 9be:	6442                	ld	s0,16(sp)
+ 9c0:	64a2                	ld	s1,8(sp)
+ 9c2:	6105                	addi	sp,sp,32
+ 9c4:	8082                	ret
+
+00000000000009c6 <filter_reset>:
+
+int filter_reset(void) {
+ 9c6:	1141                	addi	sp,sp,-16
+ 9c8:	e406                	sd	ra,8(sp)
+ 9ca:	e022                	sd	s0,0(sp)
+ 9cc:	0800                	addi	s0,sp,16
+    return setfilter(0xFFFFFFFFFFFFFFFFL); // Cho phép tất cả
+ 9ce:	557d                	li	a0,-1
+ 9d0:	a69ff0ef          	jal	438 <setfilter>
+}
+ 9d4:	60a2                	ld	ra,8(sp)
+ 9d6:	6402                	ld	s0,0(sp)
+ 9d8:	0141                	addi	sp,sp,16
+ 9da:	8082                	ret
+
+00000000000009dc <filter_is_blocked>:
+
+int filter_is_blocked(int sys_num) {
+ 9dc:	1101                	addi	sp,sp,-32
+ 9de:	ec06                	sd	ra,24(sp)
+ 9e0:	e822                	sd	s0,16(sp)
+ 9e2:	e426                	sd	s1,8(sp)
+ 9e4:	1000                	addi	s0,sp,32
+ 9e6:	84aa                	mv	s1,a0
+    long current_mask = getfilter();
+ 9e8:	a59ff0ef          	jal	440 <getfilter>
+    return !(current_mask & BLOCK(sys_num));
+ 9ec:	40955533          	sra	a0,a0,s1
+ 9f0:	00154513          	xori	a0,a0,1
+}
+ 9f4:	8905                	andi	a0,a0,1
+ 9f6:	60e2                	ld	ra,24(sp)
+ 9f8:	6442                	ld	s0,16(sp)
+ 9fa:	64a2                	ld	s1,8(sp)
+ 9fc:	6105                	addi	sp,sp,32
+ 9fe:	8082                	ret
+
+0000000000000a00 <filter_debug_status>:
+
+void filter_debug_status(void) {
+ a00:	1101                	addi	sp,sp,-32
+ a02:	ec06                	sd	ra,24(sp)
+ a04:	e822                	sd	s0,16(sp)
+ a06:	e426                	sd	s1,8(sp)
+ a08:	1000                	addi	s0,sp,32
+    long m = getfilter();
+ a0a:	a37ff0ef          	jal	440 <getfilter>
+ a0e:	84aa                	mv	s1,a0
+    printf("\n[Sandbox Monitor]\n");
+ a10:	00000517          	auipc	a0,0x0
+ a14:	10050513          	addi	a0,a0,256 # b10 <filter_debug_status+0x110>
+ a18:	dc1ff0ef          	jal	7d8 <printf>
+    printf("Whitelist Mask: %ld\n", m);
+ a1c:	85a6                	mv	a1,s1
+ a1e:	00000517          	auipc	a0,0x0
+ a22:	10a50513          	addi	a0,a0,266 # b28 <filter_debug_status+0x128>
+ a26:	db3ff0ef          	jal	7d8 <printf>
+    printf("Security Level: %s\n", (m == 0xFFFFFFFFFFFFFFFFL) ? "LOW (Permissive)" : "HIGH (Restricted)");
+ a2a:	57fd                	li	a5,-1
+ a2c:	00000597          	auipc	a1,0x0
+ a30:	0cc58593          	addi	a1,a1,204 # af8 <filter_debug_status+0xf8>
+ a34:	02f48b63          	beq	s1,a5,a6a <filter_debug_status+0x6a>
+ a38:	00000517          	auipc	a0,0x0
+ a3c:	10850513          	addi	a0,a0,264 # b40 <filter_debug_status+0x140>
+ a40:	d99ff0ef          	jal	7d8 <printf>
+    
+    if(filter_is_blocked(SYS_open)) printf(" - File access: LOCKED\n");
+ a44:	453d                	li	a0,15
+ a46:	f97ff0ef          	jal	9dc <filter_is_blocked>
+ a4a:	e50d                	bnez	a0,a74 <filter_debug_status+0x74>
+    if(filter_is_blocked(SYS_fork)) printf(" - Process creation: LOCKED\n");
+ a4c:	4505                	li	a0,1
+ a4e:	f8fff0ef          	jal	9dc <filter_is_blocked>
+ a52:	e905                	bnez	a0,a82 <filter_debug_status+0x82>
+    printf("------------------\n");
+ a54:	00000517          	auipc	a0,0x0
+ a58:	13c50513          	addi	a0,a0,316 # b90 <filter_debug_status+0x190>
+ a5c:	d7dff0ef          	jal	7d8 <printf>
+ a60:	60e2                	ld	ra,24(sp)
+ a62:	6442                	ld	s0,16(sp)
+ a64:	64a2                	ld	s1,8(sp)
+ a66:	6105                	addi	sp,sp,32
+ a68:	8082                	ret
+    printf("Security Level: %s\n", (m == 0xFFFFFFFFFFFFFFFFL) ? "LOW (Permissive)" : "HIGH (Restricted)");
+ a6a:	00000597          	auipc	a1,0x0
+ a6e:	07658593          	addi	a1,a1,118 # ae0 <filter_debug_status+0xe0>
+ a72:	b7d9                	j	a38 <filter_debug_status+0x38>
+    if(filter_is_blocked(SYS_open)) printf(" - File access: LOCKED\n");
+ a74:	00000517          	auipc	a0,0x0
+ a78:	0e450513          	addi	a0,a0,228 # b58 <filter_debug_status+0x158>
+ a7c:	d5dff0ef          	jal	7d8 <printf>
+ a80:	b7f1                	j	a4c <filter_debug_status+0x4c>
+    if(filter_is_blocked(SYS_fork)) printf(" - Process creation: LOCKED\n");
+ a82:	00000517          	auipc	a0,0x0
+ a86:	0ee50513          	addi	a0,a0,238 # b70 <filter_debug_status+0x170>
+ a8a:	d4fff0ef          	jal	7d8 <printf>
+ a8e:	b7d9                	j	a54 <filter_debug_status+0x54>
