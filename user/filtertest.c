@@ -27,7 +27,7 @@ void test1_initial_mask_zero(void) {
 void test2_set_get_mask(void) {
   int pid = fork();
   if (pid == 0) {
-    uint64 want = FILTER_UPTIME;
+    uint64 want = SANDBOX_BLOCK(SYS_uptime);
     setfilter(want);
     uint64 got = getfilter();
     exit(got == want ? 1 : 0);
@@ -42,7 +42,7 @@ void test2_set_get_mask(void) {
 void test3_fork_inheritance(void) {
   int pid1 = fork();
   if (pid1 == 0) {
-    uint64 parent_mask = FILTER_UPTIME;
+    uint64 parent_mask = SANDBOX_BLOCK(SYS_uptime);
     setfilter(parent_mask);
 
     int pid2 = fork();
@@ -65,7 +65,7 @@ void test3_fork_inheritance(void) {
 void test4_policy_weaken(void) {
   int pid = fork();
   if (pid == 0) {
-    setfilter(FILTER_UPTIME); 
+    setfilter(SANDBOX_BLOCK(SYS_uptime)); 
     int r = setfilter(0);    // Attempt to weaken
     exit(r == -1 ? 1 : 0);
   } else {
@@ -79,8 +79,8 @@ void test4_policy_weaken(void) {
 void test5_policy_tighten(void) {
   int pid = fork();
   if (pid == 0) {
-    setfilter(FILTER_UPTIME);
-    int r = setfilter(FILTER_UPTIME | FILTER_SBRK); // tighter mask
+    setfilter(SANDBOX_BLOCK(SYS_uptime));
+    int r = setfilter(SANDBOX_BLOCK(SYS_uptime) | SANDBOX_BLOCK(SYS_sbrk)); // tighter mask
     exit(r == 0 ? 1 : 0);
   } else {
     int status;
@@ -93,7 +93,7 @@ void test5_policy_tighten(void) {
 void test6_write_blocked(void) {
   int pid = fork();
   if (pid == 0) {
-    setfilter(FILTER_WRITE);
+    setfilter(SANDBOX_BLOCK(SYS_write));
     // Since write is blocked, printf is no longer available.
     int r = write(1, "should fail\n", 12);
     // write MUST return -1

@@ -7,7 +7,7 @@ int main() {
     printf("1. Tien trinh hien tai dang co quyen in an (write).\n");
 
     // Thiet lap filter chan write
-    if(setfilter(FILTER_WRITE) < 0){
+    if(setfilter(SANDBOX_BLOCK(SYS_write)) < 0){
         printf("Loi: Khong the setfilter\n");
         exit(1);
     }

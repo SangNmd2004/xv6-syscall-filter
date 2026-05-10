@@ -9,7 +9,7 @@ int main(void) {
 
     // Giả sử logic của bạn là Blacklist (như Dev 1 yêu cầu)
     // Chặn WRITE và OPEN
-    uint64 mask = FILTER_WRITE | FILTER_OPEN; 
+    uint64 mask = SANDBOX_BLOCK(SYS_write) | SANDBOX_BLOCK(SYS_open); 
 
     if(setfilter(mask) < 0){
         // Nếu lỗi này hiện ra nghĩa là setfilter thất bại

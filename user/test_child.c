@@ -24,7 +24,7 @@ int main() {
     printf("--- BAT DAU TEST SETFILTER_CHILD ---\n");
 
     // 1. Cha thiet lap luat: "Cac con cua ta sau nay khong duoc phep READ"
-    if(setfilter_child(FILTER_READ) < 0){
+    if(setfilter_child(SANDBOX_BLOCK(SYS_read)) < 0){
         printf("Loi: Khong the goi setfilter_child\n");
         exit(1);
     }

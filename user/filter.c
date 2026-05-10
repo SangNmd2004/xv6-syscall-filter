@@ -2,17 +2,17 @@
 #include "user/user.h"
 #include "user/filter.h"
 
-int filter_enable(long blacklist_mask) {
+int sandbox_set_mask(uint64 mask) {
     // Truyền thẳng mask xuống Kernel (Bit 1 = BỊ CHẶN)
-    return setfilter(blacklist_mask);
+    return setfilter(mask);
 }
 
-int filter_add_rule(int sys_num) {
-    long current_mask = getfilter();
-    return setfilter(current_mask | BLOCK(sys_num));
+int sandbox_block_syscall(int sys_num) {
+    uint64 current_mask = getfilter();
+    return setfilter(current_mask | SANDBOX_BLOCK(sys_num));
 }
 
-int filter_is_blocked(int sys_num) {
-    long current_mask = getfilter();
-    return (current_mask & BLOCK(sys_num)) != 0;
+int sandbox_is_blocked(int sys_num) {
+    uint64 current_mask = getfilter();
+    return (current_mask & SANDBOX_BLOCK(sys_num)) != 0;
 }

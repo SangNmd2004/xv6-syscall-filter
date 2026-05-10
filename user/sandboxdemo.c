@@ -3,7 +3,7 @@
 #include "user/user.h"
 
 
-#define MASK_FORBIDDEN (FILTER_OPEN) // Cấm gọi hàm open()
+
 
 void test_sandbox() {
     int pid = fork();
@@ -13,7 +13,7 @@ void test_sandbox() {
         printf("\n[Child] Bat dau thiet lap Sandbox...\n");
 
         // Áp dụng bộ lọc: CẤM open()
-        if (filter_enable(MASK_FORBIDDEN) < 0) {
+        if (sandbox_block_syscall(SYS_open) < 0) {
             printf("[Child] Loi: Khong the set filter!\n");
             exit(1);
         }
