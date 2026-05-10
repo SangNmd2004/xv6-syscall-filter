@@ -53,3 +53,21 @@ dkms.conf
 
 # debug information files
 *.dwo
+
+# xv6 specific ignored files
+*~
+_*
+*.asm
+*.sym
+*.img
+vectors.S
+bootblock
+entryother
+initcode
+initcode.out
+kernelmemfs
+mkfs/mkfs
+kernel/kernel
+user/usys.S
+.gdbinit
+fs.img
