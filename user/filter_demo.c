@@ -2,32 +2,25 @@
 #include "user/user.h"
 #include "user/filter.h"
 
-int
-main(void)
-{
-  // MASK: Chỉ cho phép SETFILTER, GETFILTER và EXIT. 
-  // KHÔNG cho phép WRITE.
-  uint64 mask = FILTER_SETFILTER | FILTER_GETFILTER | FILTER_EXIT;
+int main(void) {
+    // 1. In thông báo TRƯỚC khi bật filter
+    printf("--- KHOI DONG DEMO SANDBOX ---\n");
+    printf("Buoc 1: Dang bat bo loc (CAM write và open)...\n");
 
-  printf("TEST_ERRNO: Dang bat bo loc (cam WRITE)...\n");
+    // Giả sử logic của bạn là Blacklist (như Dev 1 yêu cầu)
+    // Chặn WRITE và OPEN
+    uint64 mask = FILTER_WRITE | FILTER_OPEN; 
 
-  if(setfilter(mask) < 0){
-    printf("TEST_ERRNO: Khong the thiet lap bo loc.\n");
-    exit(1);
-  }
+    if(setfilter(mask) < 0){
+        // Nếu lỗi này hiện ra nghĩa là setfilter thất bại
+        exit(1);
+    }
 
-  // Co gang goi write vao stdout (fd = 1)
-  char *msg = "Dong nay se bi chan!\n";
-  int n = write(1, msg, 21);
-
-  // Vi write da bi chan, printf duoi day se KHONG HIEN THI tren man hinh 
-  printf("Gia tri n nhan duoc: %d\n", n);
-  // CACH KIEM TRA: Neu m thay n < 0, nghia la syscall tra ve loi (tuong tu errno)
-  if(n < 0) {
-    printf("XAC NHAN: Syscall write da bi chan gia (tra ve -1)!\n");
-    // Neu muon thay dong nay, m phai tam mo WRITE trong kernel printf
-    // Hoac kiem tra qua log cua Kernel (da lam o buoc truoc)
-  }
-
-  exit(0);
+    // 2. Thử gọi lệnh bị cấm
+    // Lưu ý: Sau dòng này, printf sẽ KHÔNG hoạt động nữa
+    open("secret.txt", 0); 
+    
+    // 3. Kết thúc
+    // Lệnh exit phải được cho phép để tiến trình thoát sạch sẽ
+    exit(0); 
 }
