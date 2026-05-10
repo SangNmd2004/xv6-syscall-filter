@@ -124,7 +124,8 @@ allocproc(void)
 found:
   p->pid = allocpid();
   p->state = USED;
-  p->syscall_mask = 0xffffffff;
+  p->syscall_mask = 0;
+  p->child_syscall_mask = 0;
 
   // Allocate a trapframe page.
   if((p->trapframe = (struct trapframe *)kalloc()) == 0){
@@ -150,6 +151,7 @@ found:
   return p;
 }
 
+
 // free a proc structure and the data hanging from it,
 // including user pages.
 // p->lock must be held.
@@ -170,6 +172,7 @@ freeproc(struct proc *p)
   p->killed = 0;
   p->xstate = 0;
   p->syscall_mask = 0;
+  p->child_syscall_mask = 0;
   p->state = UNUSED;
 }
 
