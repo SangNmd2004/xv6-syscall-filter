@@ -16,3 +16,7 @@ int sandbox_is_blocked(int sys_num) {
     uint64 current_mask = getfilter();
     return (current_mask & SANDBOX_BLOCK(sys_num)) != 0;
 }
+
+int sandbox_set_audit(int enable) {
+    return setaudit(enable);
+}

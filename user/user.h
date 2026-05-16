@@ -50,4 +50,5 @@ void free(void*);
 int setfilter(uint64 mask);
 uint64 getfilter(void);
 int setfilter_child(uint64);
+int setaudit(int);
 

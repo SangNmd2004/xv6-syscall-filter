@@ -106,6 +106,7 @@ extern uint64 sys_hello(void);
 extern uint64 sys_setfilter(void); // set syscall filter
 extern uint64 sys_getfilter(void); // get syscall filter
 extern uint64 sys_setfilter_child(void);
+extern uint64 sys_setaudit(void);
 // An array mapping syscall numbers from syscall.h
 // to the function that handles the system call.
 static uint64 (*syscalls[])(void) = {
@@ -134,6 +135,7 @@ static uint64 (*syscalls[])(void) = {
 [SYS_setfilter] sys_setfilter, // set syscall filter
 [SYS_getfilter] sys_getfilter, // get syscall filter
 [SYS_setfilter_child] sys_setfilter_child,
+[SYS_setaudit] sys_setaudit,
 
 };
 
@@ -153,8 +155,9 @@ syscall(void)
    if(p->syscall_mask & ((uint64)1 << num)) {
       p->trapframe->a0 = -1; 
       
-      // (Tùy chọn) In thông báo ra màn hình Kernel để dễ debug
-      // printf("Tien trinh %d (%s): Syscall %d bi chan boi Sandbox!\n", p->pid, p->name, num);
+      if(p->audit_enabled) {
+          printf("Sandbox Audit: Tien trinh %d (%s) bi chan Syscall %d!\n", p->pid, p->name, num);
+      }
       
       return; // Kết thúc luôn, không chạy hàm thực thi syscalls[num]() nữa
     }

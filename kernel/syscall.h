@@ -24,3 +24,4 @@
 #define SYS_setfilter 23 // set syscall filter
 #define SYS_getfilter 24 // get syscall filter
 #define SYS_setfilter_child 25
+#define SYS_setaudit 26

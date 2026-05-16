@@ -162,3 +162,16 @@ sys_setfilter_child(void)
   p->child_syscall_mask = mask;
   return 0;
 }
+
+uint64
+sys_setaudit(void)
+{
+  int enable;
+  struct proc *p = myproc();
+
+  if(argint(0, &enable) < 0)
+    return -1;
+
+  p->audit_enabled = enable;
+  return 0;
+}

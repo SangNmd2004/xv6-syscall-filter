@@ -45,3 +45,4 @@ entry("uptime");
 entry("setfilter");
 entry("getfilter");
 entry("setfilter_child");
+entry("setaudit");

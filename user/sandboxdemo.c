@@ -17,6 +17,12 @@ void test_sandbox() {
             printf("[Child] Loi: Khong the set filter!\n");
             exit(1);
         }
+        
+        // Bật tính năng ghi log Sandbox Audit
+        if (sandbox_set_audit(1) < 0) {
+            printf("[Child] Loi: Khong the bat Audit!\n");
+            exit(1);
+        }
 
         printf("[Child] Thu ham write (Duoc phep)...\n");
         write(1, "[Child] Write van chay binh thuong!\n", 36);

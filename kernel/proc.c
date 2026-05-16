@@ -126,6 +126,7 @@ found:
   p->state = USED;
   p->syscall_mask = 0;
   p->child_syscall_mask = 0;
+  p->audit_enabled = 0;
 
   // Allocate a trapframe page.
   if((p->trapframe = (struct trapframe *)kalloc()) == 0){
@@ -173,6 +174,7 @@ freeproc(struct proc *p)
   p->xstate = 0;
   p->syscall_mask = 0;
   p->child_syscall_mask = 0;
+  p->audit_enabled = 0;
   p->state = UNUSED;
 }
 
@@ -284,6 +286,9 @@ kfork(void)
   // Sau khi dùng xong, có thể reset child_syscall_mask của cha về 0 
   // nếu bạn muốn các con tiếp theo không bị dính mask này
   p->child_syscall_mask = 0;
+  
+  // Sao chép trạng thái Audit
+  np->audit_enabled = p->audit_enabled;
   
   // Copy user memory from parent to child.
   if(uvmcopy(p->pagetable, np->pagetable, p->sz) < 0){
