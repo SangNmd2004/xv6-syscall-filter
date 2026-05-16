@@ -61,4 +61,3 @@ When a user program executes an `ecall`, the Trap Handler forwards it to the Sys
 During the `allocproc -> kfork -> freeproc` lifecycle, the kernel guarantees that all security masks (`syscall_mask` and `audit_enabled`) are zero-initialized, deeply copied during fork, and cleanly wiped upon process termination.
 
 ---
-*Built with ❤️ for Operating Systems Architecture Course.*
