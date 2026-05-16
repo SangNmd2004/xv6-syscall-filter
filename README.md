@@ -57,7 +57,64 @@ Once inside the xv6 shell, you can run the following built-in test programs:
 ### Syscall Interception & Audit Workflow
 When a user program executes an `ecall`, the Trap Handler forwards it to the Syscall Dispatcher. The dispatcher checks the Bitmask in $O(1)$ time. If blocked, it optionally triggers the Audit Logger before returning a Graceful Fail (`-1`).
 
+```mermaid
+sequenceDiagram
+    participant UserProcess as User Process
+    participant Trap as Trap Handler (trap.c)
+    participant SyscallDispatcher as Syscall Dispatcher (syscall.c)
+    participant Audit as Audit Logger
+    participant Kernel as Kernel Execution
+
+    UserProcess->>Trap: ecall (e.g., SYS_open = 15)
+    Trap->>SyscallDispatcher: trapframe->a7 = 15
+    
+    Note over SyscallDispatcher: Sandbox Filtering Logic
+    SyscallDispatcher->>SyscallDispatcher: Check p->syscall_mask & (1 << 15)
+    
+    alt is Blocked (Bit == 1)
+        SyscallDispatcher->>Audit: Check p->audit_enabled
+        alt Audit Enabled
+            Audit-->>Kernel: Print: "Sandbox Audit: Process Blocked!"
+        end
+        SyscallDispatcher-->>UserProcess: Return -1 (Graceful Fail)
+    else is Allowed (Bit == 0)
+        SyscallDispatcher->>Kernel: Execute sys_open()
+        Kernel-->>UserProcess: Return file descriptor
+    end
+```
+
 ### Security State Machine
 During the `allocproc -> kfork -> freeproc` lifecycle, the kernel guarantees that all security masks (`syscall_mask` and `audit_enabled`) are zero-initialized, deeply copied during fork, and cleanly wiped upon process termination.
+
+```mermaid
+stateDiagram-v2
+    direction LR
+    [*] --> allocproc: Kernel Boots / Fork
+    
+    state allocproc {
+        [*] --> Initialize
+        Initialize --> Set_Zero: p->syscall_mask = 0
+        Set_Zero --> Audit_Zero: p->audit_enabled = 0
+    }
+    
+    allocproc --> kfork: Parent calls fork()
+    
+    state kfork {
+        [*] --> Inherit
+        Inherit --> Copy_Mask: np->syscall_mask = p->syscall_mask
+        Copy_Mask --> Copy_Audit: np->audit_enabled = p->audit_enabled
+    }
+    
+    kfork --> Running: Child executes
+    Running --> freeproc: Process Exits
+    
+    state freeproc {
+        [*] --> Cleanup
+        Cleanup --> Reset_Mask: p->syscall_mask = 0
+        Reset_Mask --> Reset_Audit: p->audit_enabled = 0
+    }
+    
+    freeproc --> [*]: Reclaimed by Kernel
+```
 
 ---
