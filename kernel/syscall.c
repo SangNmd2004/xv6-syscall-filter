@@ -150,18 +150,23 @@ syscall(void)
   
   if(num > 0 && num < NELEM(syscalls) && syscalls[num]) {
     
-    // --- ĐÂY LÀ ĐOẠN LOGIC CHẶN ---
-    // Kiểm tra xem bit thứ 'num' trong syscall_mask có đang bật không
-   if(p->syscall_mask & ((uint64)1 << num)) {
-      p->trapframe->a0 = -1; 
+    // --- ĐÂY LÀ ĐOẠN LOGIC CHẶN ĐÃ ĐƯỢC CẬP NHẬT ---
+    if(p->syscall_mask & ((uint64)1 << num)) {
       
+      // 1. Kiểm tra nếu chế độ audit được bật thì in log ra console của nhân
       if(p->audit_enabled) {
           printf("Sandbox Audit: Tien trinh %d (%s) bi chan Syscall %d!\n", p->pid, p->name, num);
       }
       
-      return; // Kết thúc luôn, không chạy hàm thực thi syscalls[num]() nữa
+      // 2. Thiết lập giá trị trả về của syscall thành -1 (báo lỗi)
+      p->trapframe->a0 = -1; 
+      
+      // 3. QUAN TRỌNG: Đánh dấu giết tiến trình này vì vi phạm an ninh sandbox!
+      p->killed = 1; 
+      
+      return; // Kết thúc luôn, chặn đứng không cho thực thi hệ thống lệnh
     }
-    // ------------------------------
+    // ----------------------------------------------
 
     // Nếu không bị chặn, tiến hành thực thi bình thường
     p->trapframe->a0 = syscalls[num]();
