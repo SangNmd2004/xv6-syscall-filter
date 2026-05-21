@@ -6,6 +6,7 @@
 #include "proc.h"
 #include "syscall.h"
 #include "defs.h"
+#include "fcntl.h"
 
 // Fetch the uint64 at addr from the current process.
 int
@@ -153,10 +154,29 @@ syscall(void)
     // --- ĐÂY LÀ ĐOẠN LOGIC CHẶN ---
     // Kiểm tra xem bit thứ 'num' trong syscall_mask có đang bật không
    if(p->syscall_mask & ((uint64)1 << num)) {
+      
+      // Argument Filtering cho SYS_open
+      if (num == SYS_open) {
+          int omode = p->trapframe->a1;
+          char path[MAXPATH];
+          if (fetchstr(p->trapframe->a0, path, MAXPATH) < 0) {
+              p->trapframe->a0 = -1;
+              return;
+          }
+          
+          // Bỏ qua chặn nếu chỉ đọc O_RDONLY và file KHÔNG chứa chữ "secret"
+          if (!(omode & O_WRONLY) && !(omode & O_RDWR) && strncmp(path, "secret", 6) != 0) {
+              // Bypass Sandbox! Cho phép thực thi
+              p->trapframe->a0 = syscalls[num]();
+              return;
+          }
+      }
+
       p->trapframe->a0 = -1; 
       
       if(p->audit_enabled) {
           printf("Sandbox Audit: Tien trinh %d (%s) bi chan Syscall %d!\n", p->pid, p->name, num);
+          audit_log_write("Sandbox Audit: Violation detected!\n");
       }
       
       return; // Kết thúc luôn, không chạy hàm thực thi syscalls[num]() nữa

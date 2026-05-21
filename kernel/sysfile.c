@@ -503,3 +503,24 @@ sys_pipe(void)
   }
   return 0;
 }
+
+// Persistent Audit Logging: Write message directly to /audit.log
+void audit_log_write(char *msg)
+{
+  struct inode *ip;
+  int n = strlen(msg);
+
+  begin_op();
+  if((ip = namei("/audit.log")) == 0){
+    // If it doesn't exist, we don't log to file. Administrator must touch /audit.log first.
+    end_op();
+    return;
+  }
+  
+  ilock(ip);
+  if(ip->type == T_FILE){
+    writei(ip, 0, (uint64)msg, ip->size, n);
+  }
+  iunlockput(ip);
+  end_op();
+}
