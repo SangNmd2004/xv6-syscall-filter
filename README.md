@@ -11,7 +11,9 @@ An advanced, highly secure system call filtering mechanism (Sandbox) implemented
 3. **Policy C (Additive-Only Ratchet)**: To prevent sandbox escape, a process can only *tighten* its restrictions. Once a syscall is blocked, it can **never** be unblocked.
 4. **State Inheritance**: Child processes spawned via `fork()` strictly inherit the sandbox constraints of their parent.
 5. **Zero Memory Leakage**: Guaranteed cleanup of process states during `allocproc` and `freeproc`.
-6. **Audit Logging**: A dedicated syscall (`SYS_setaudit`) allows the kernel to log and alert system administrators when a process attempts to violate its sandbox constraints.
+6. **Audit Logging**: A dedicated syscall (`SYS_setaudit`) allows the kernel to alert system administrators when a process attempts to violate its sandbox constraints.
+7. **Deep Argument Filtering**: Intercepts `SYS_open` arguments directly from registers `a0`/`a1`. Intelligently bypasses the sandbox for safe, read-only file accesses (`O_RDONLY`) while blocking malicious paths.
+8. **Persistent FS Logging**: Audit logs are securely written to `/audit.log` via deep kernel-level file operations (`begin_op`, `writei`) without risking system deadlocks.
 
 ---
 
@@ -55,26 +57,31 @@ Once inside the xv6 shell, you can run the following built-in test programs:
 ## 📊 System Architecture
 
 ### Syscall Interception & Audit Workflow
-When a user program executes an `ecall`, the Trap Handler forwards it to the Syscall Dispatcher. The dispatcher checks the Bitmask in $O(1)$ time. If blocked, it optionally triggers the Audit Logger before returning a Graceful Fail (`-1`).
+When a user program executes an `ecall`, the Trap Handler forwards it to the Syscall Dispatcher. The dispatcher performs a $O(1)$ Bitmask check and a Deep Argument Inspection. If blocked and deemed unsafe, it triggers the Persistent FS Logger before returning a Graceful Fail (`-1`).
 
 ```mermaid
 sequenceDiagram
     participant UserProcess as User Process
     participant Trap as Trap Handler (trap.c)
     participant SyscallDispatcher as Syscall Dispatcher (syscall.c)
-    participant Audit as Audit Logger
+    participant FS as File System (sysfile.c)
     participant Kernel as Kernel Execution
 
     UserProcess->>Trap: ecall (e.g., SYS_open = 15)
     Trap->>SyscallDispatcher: trapframe->a7 = 15
     
-    Note over SyscallDispatcher: Sandbox Filtering Logic
+    Note over SyscallDispatcher: Sandbox & Argument Inspection
     SyscallDispatcher->>SyscallDispatcher: Check p->syscall_mask & (1 << 15)
     
-    alt is Blocked (Bit == 1)
-        SyscallDispatcher->>Audit: Check p->audit_enabled
+    alt is Blocked but Safe (O_RDONLY & non-secret)
+        SyscallDispatcher->>Kernel: Bypass Sandbox: Execute sys_open()
+        Kernel-->>UserProcess: Return file descriptor
+    else is Blocked & Unsafe (Write or secret.txt)
+        SyscallDispatcher->>SyscallDispatcher: Check p->audit_enabled
         alt Audit Enabled
-            Audit-->>Kernel: Print: "Sandbox Audit: Process Blocked!"
+            SyscallDispatcher->>FS: audit_log_write()
+            Note over FS: begin_op() -> namei() -> writei() -> end_op()
+            FS-->>SyscallDispatcher: Appended to /audit.log
         end
         SyscallDispatcher-->>UserProcess: Return -1 (Graceful Fail)
     else is Allowed (Bit == 0)
