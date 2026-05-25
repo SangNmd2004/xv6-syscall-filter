@@ -127,6 +127,7 @@ found:
   p->syscall_mask = 0;
   p->child_syscall_mask = 0;
   p->audit_enabled = 0;
+  p->strict_mode = 0;
 
   // Allocate a trapframe page.
   if((p->trapframe = (struct trapframe *)kalloc()) == 0){
@@ -175,6 +176,7 @@ freeproc(struct proc *p)
   p->syscall_mask = 0;
   p->child_syscall_mask = 0;
   p->audit_enabled = 0;
+  p->strict_mode = 0;
   p->state = UNUSED;
 }
 
@@ -290,6 +292,9 @@ kfork(void)
   // Sao chép trạng thái Audit
   np->audit_enabled = p->audit_enabled;
   
+  // Sao chép trạng thái Strict Mode
+  np->strict_mode = p->strict_mode;
+
   // Copy user memory from parent to child.
   if(uvmcopy(p->pagetable, np->pagetable, p->sz) < 0){
     freeproc(np);

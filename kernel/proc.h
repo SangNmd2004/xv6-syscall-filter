@@ -107,4 +107,5 @@ struct proc {
   char name[16];               // Process name (debugging)
   uint64 child_syscall_mask; // Mask sẽ áp dụng cho con khi fork()
   int audit_enabled;         // Cờ để bật tắt chức năng ghi log Sandbox
+  int strict_mode;           // Co de bat tat che do chat che hon cho sandbox (khong cho in ra log neu co syscall bi chan)
 };

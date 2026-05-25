@@ -108,6 +108,7 @@ extern uint64 sys_setfilter(void); // set syscall filter
 extern uint64 sys_getfilter(void); // get syscall filter
 extern uint64 sys_setfilter_child(void);
 extern uint64 sys_setaudit(void);
+extern uint64 sys_setstrict(void);
 // An array mapping syscall numbers from syscall.h
 // to the function that handles the system call.
 static uint64 (*syscalls[])(void) = {
@@ -137,23 +138,23 @@ static uint64 (*syscalls[])(void) = {
 [SYS_getfilter] sys_getfilter, // get syscall filter
 [SYS_setfilter_child] sys_setfilter_child,
 [SYS_setaudit] sys_setaudit,
-
+[SYS_setstrict] sys_setstrict,
 };
 
 
 void
 syscall(void)
 {
-  int num;
+  int num; // Đây là biến num gốc có sẵn của xv6, GIỮ NGUYÊN dòng này!
   struct proc *p = myproc();
 
-  num = p->trapframe->a7; // Lấy số hiệu syscall (ví dụ: SYS_write là 16)
+  num = p->trapframe->a7; // SỬA TẠI ĐÂY: Bỏ chữ "int" đi vì num đã khai báo ở trên!
   
   if(num > 0 && num < NELEM(syscalls) && syscalls[num]) {
     
     // --- ĐÂY LÀ ĐOẠN LOGIC CHẶN ---
     // Kiểm tra xem bit thứ 'num' trong syscall_mask có đang bật không
-   if(p->syscall_mask & ((uint64)1 << num)) {
+    if(p->syscall_mask & ((uint64)1 << num)) {
       
       // Argument Filtering cho SYS_open
       if (num == SYS_open) {
@@ -171,6 +172,14 @@ syscall(void)
               return;
           }
       }
+
+      // Xử lý Strict Mode (Kill on Violation)
+      if (p->strict_mode) { 
+        printf("Sandbox: Process %d KILLED due to strict violation!\n", p->pid);
+        p->killed = 1; 
+        p->trapframe->a0 = -1;
+        return;
+      } 
 
       p->trapframe->a0 = -1; 
       
