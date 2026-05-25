@@ -155,7 +155,9 @@ UPROGS=\
 		$U/_stresstest\
 		$U/_scenariotest\
 		$U/_sandbox\
-		
+		$U/_sandbox_strict\
+		$U/_test_profile\
+
 fs.img: mkfs/mkfs README $(UPROGS)
 	mkfs/mkfs fs.img README $(UPROGS)
 

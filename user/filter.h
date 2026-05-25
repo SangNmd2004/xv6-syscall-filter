@@ -12,5 +12,5 @@ int sandbox_set_mask(uint64 mask);
 int sandbox_block_syscall(int sys_num);
 int sandbox_is_blocked(int sys_num);
 int sandbox_set_audit(int enable);
-
+int sandbox_apply_profile(const char* profile);
 #endif

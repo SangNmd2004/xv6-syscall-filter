@@ -46,3 +46,4 @@ entry("setfilter");
 entry("getfilter");
 entry("setfilter_child");
 entry("setaudit");
+entry("setstrict"); 

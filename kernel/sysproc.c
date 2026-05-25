@@ -175,3 +175,16 @@ sys_setaudit(void)
   p->audit_enabled = enable;
   return 0;
 }
+
+uint64
+sys_setstrict(void)
+{
+  int value;
+  // Bóc tách tham số nguyên đầu tiên (vị trí 0)
+  if(argint(0, &value) < 0)
+    return -1;
+
+  // Gán giá trị (0 hoặc 1) vào cấu trúc proc của tiến trình gọi hệ thống
+  myproc()->strict_mode = value; 
+  return 0;
+}

@@ -107,6 +107,7 @@ extern uint64 sys_setfilter(void); // set syscall filter
 extern uint64 sys_getfilter(void); // get syscall filter
 extern uint64 sys_setfilter_child(void);
 extern uint64 sys_setaudit(void);
+extern uint64 sys_setstrict(void);
 // An array mapping syscall numbers from syscall.h
 // to the function that handles the system call.
 static uint64 (*syscalls[])(void) = {
@@ -136,43 +137,44 @@ static uint64 (*syscalls[])(void) = {
 [SYS_getfilter] sys_getfilter, // get syscall filter
 [SYS_setfilter_child] sys_setfilter_child,
 [SYS_setaudit] sys_setaudit,
-
+[SYS_setstrict] sys_setstrict,
 };
 
 
 void
 syscall(void)
 {
-  int num;
+  int num; // Đây là biến num gốc có sẵn của xv6, GIỮ NGUYÊN dòng này!
   struct proc *p = myproc();
 
-  num = p->trapframe->a7; // Lấy số hiệu syscall (ví dụ: SYS_write là 16)
+  num = p->trapframe->a7; // SỬA TẠI ĐÂY: Bỏ chữ "int" đi vì num đã khai báo ở trên!
   
-  if(num > 0 && num < NELEM(syscalls) && syscalls[num]) {
-    
-    // --- ĐÂY LÀ ĐOẠN LOGIC CHẶN ĐÃ ĐƯỢC CẬP NHẬT ---
-    if(p->syscall_mask & ((uint64)1 << num)) {
+  // ------------------------------------------------------------
+  // ĐOẠN LOGIC KIỂM TRA SANDBOX VÀ STRICT MODE ĐÃ ĐƯỢC SỬA LỖI:
+  // ------------------------------------------------------------
+  if (p->syscall_mask & ((uint64)1 << num)) { // Nếu vi phạm bộ lọc Sandbox
+    if (p->strict_mode) { 
+      // In cảnh báo hệ thống
+      printf("Sandbox: Process %d KILLED due to strict violation!\n", p->pid);
       
-      // 1. Kiểm tra nếu chế độ audit được bật thì in log ra console của nhân
-      if(p->audit_enabled) {
-          printf("Sandbox Audit: Tien trinh %d (%s) bi chan Syscall %d!\n", p->pid, p->name, num);
-      }
-      
-      // 2. Thiết lập giá trị trả về của syscall thành -1 (báo lỗi)
-      p->trapframe->a0 = -1; 
-      
-      // 3. QUAN TRỌNG: Đánh dấu giết tiến trình này vì vi phạm an ninh sandbox!
+      // SỬA TẠI ĐÂY: Đặt cờ tử hình của xv6 để hệ thống tự giải phóng khi thoát trap
       p->killed = 1; 
-      
-      return; // Kết thúc luôn, chặn đứng không cho thực thi hệ thống lệnh
+      p->trapframe->a0 = -1;
+      return;
+    } 
+    else {
+      // Chế độ mềm dẻo mặc định: Chỉ trả về mã lỗi -1
+      p->trapframe->a0 = -1;
+      return;
     }
-    // ----------------------------------------------
+  }
+  // ------------------------------------------------------------
 
-    // Nếu không bị chặn, tiến hành thực thi bình thường
+  // Đoạn code gốc tiếp theo của xv6 (Kiểm tra ID hợp lệ và gọi hàm)
+  if(num > 0 && num < NELEM(syscalls) && syscalls[num]) {
     p->trapframe->a0 = syscalls[num]();
   } else {
-    printf("%d %s: unknown sys call %d\n",
-            p->pid, p->name, num);
+    printf("%d %s: unknown sys call %d\n", p->pid, p->name, num);
     p->trapframe->a0 = -1;
   }
 }

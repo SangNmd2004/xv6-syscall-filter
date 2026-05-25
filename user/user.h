@@ -51,4 +51,7 @@ int setfilter(uint64 mask);
 uint64 getfilter(void);
 int setfilter_child(uint64);
 int setaudit(int);
-
+int setstrict(int);
+int sandbox_block_syscall(int syscall_num);
+int sandbox_set_audit(int);
+int sandbox_set_mask(uint64 mask);
