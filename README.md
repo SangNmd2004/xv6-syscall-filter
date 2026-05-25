@@ -77,13 +77,18 @@ sequenceDiagram
         SyscallDispatcher->>Kernel: Bypass Sandbox: Execute sys_open()
         Kernel-->>UserProcess: Return file descriptor
     else is Blocked & Unsafe (Write or secret.txt)
-        SyscallDispatcher->>SyscallDispatcher: Check p->audit_enabled
-        alt Audit Enabled
-            SyscallDispatcher->>FS: audit_log_write()
-            Note over FS: begin_op() -> namei() -> writei() -> end_op()
-            FS-->>SyscallDispatcher: Appended to /audit.log
+        SyscallDispatcher->>SyscallDispatcher: Check p->strict_mode
+        alt Strict Mode ENABLED
+            SyscallDispatcher->>UserProcess: KILL PROCESS (p->killed = 1)
+        else Strict Mode DISABLED
+            SyscallDispatcher->>SyscallDispatcher: Check p->audit_enabled
+            alt Audit Enabled
+                SyscallDispatcher->>FS: audit_log_write()
+                Note over FS: begin_op() -> namei() -> writei() -> end_op()
+                FS-->>SyscallDispatcher: Appended to /audit.log
+            end
+            SyscallDispatcher-->>UserProcess: Return -1 (Graceful Fail)
         end
-        SyscallDispatcher-->>UserProcess: Return -1 (Graceful Fail)
     else is Allowed (Bit == 0)
         SyscallDispatcher->>Kernel: Execute sys_open()
         Kernel-->>UserProcess: Return file descriptor
@@ -102,6 +107,7 @@ stateDiagram-v2
         [*] --> Initialize
         Initialize --> Set_Zero: p->syscall_mask = 0
         Set_Zero --> Audit_Zero: p->audit_enabled = 0
+        Audit_Zero --> Strict_Zero: p->strict_mode = 0
     }
     
     allocproc --> kfork: Parent calls fork()
@@ -110,6 +116,7 @@ stateDiagram-v2
         [*] --> Inherit
         Inherit --> Copy_Mask: np->syscall_mask = p->syscall_mask
         Copy_Mask --> Copy_Audit: np->audit_enabled = p->audit_enabled
+        Copy_Audit --> Copy_Strict: np->strict_mode = p->strict_mode
     }
     
     kfork --> Running: Child executes
@@ -119,6 +126,7 @@ stateDiagram-v2
         [*] --> Cleanup
         Cleanup --> Reset_Mask: p->syscall_mask = 0
         Reset_Mask --> Reset_Audit: p->audit_enabled = 0
+        Reset_Audit --> Reset_Strict: p->strict_mode = 0
     }
     
     freeproc --> [*]: Reclaimed by Kernel
