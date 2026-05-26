@@ -7,50 +7,50 @@
 void test_read(char *name) {
     int fd = open("README", O_RDONLY);
     if(fd < 0){
-        printf("%s: Khong the mo file README\n", name);
+        printf("%s: Cannot open README file\n", name);
         return;
     }
     
     char buf[10];
     if(read(fd, buf, sizeof(buf)) < 0){
-        printf("%s: READ BI CHAN! (Thanh cong)\n", name);
+        printf("%s: READ BLOCKED! (Success)\n", name);
     } else {
-        printf("%s: READ BINH THUONG! (Chua bi chan)\n", name);
+        printf("%s: READ NORMAL! (Not blocked)\n", name);
     }
     close(fd);
 }
 
 int main() {
-    printf("--- BAT DAU TEST SETFILTER_CHILD ---\n");
+    printf("--- START SETFILTER_CHILD TEST ---\n");
 
-    // 1. Cha thiet lap luat: "Cac con cua ta sau nay khong duoc phep READ"
+    // 1. Parent sets the rule: "My future children cannot READ"
     if(setfilter_child(SANDBOX_BLOCK(SYS_read)) < 0){
-        printf("Loi: Khong the goi setfilter_child\n");
+        printf("Error: Cannot call setfilter_child\n");
         exit(1);
     }
-    printf("Cha: Da dat luat cam READ cho cac con.\n");
+    printf("Parent: Set rule to block READ for children.\n");
 
-    // 2. Cha tu kiem tra xem minh co bi anh huong khong
-    printf("Cha: Dang thu doc file...\n");
-    test_read("Cha");
+    // 2. Parent checks if it's affected
+    printf("Parent: Trying to read file...\n");
+    test_read("Parent");
 
-    // 3. Tao tien trinh con
+    // 3. Create child process
     int pid = fork();
 
     if(pid < 0){
-        printf("Loi fork\n");
+        printf("Fork error\n");
         exit(1);
     }
 
     if(pid == 0){
-        // Tien trinh con
-        printf("\nCon: Dang thu doc file (dang le phai bi chan)...\n");
-        test_read("Con");
+        // Child process
+        printf("\nChild: Trying to read file (should be blocked)...\n");
+        test_read("Child");
         exit(0);
     } else {
-        // Tien trinh cha doi con thuc hien xong
+        // Parent process waits for child to finish
         wait(0);
-        printf("\n--- KET THUC TEST ---\n");
+        printf("\n--- END OF TEST ---\n");
     }
 
     exit(0);

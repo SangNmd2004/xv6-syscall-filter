@@ -14,28 +14,28 @@ void print_mask(uint64 mask) {
 
 int main(int argc, char *argv[]) {
     if(argc < 2) {
-        printf("Huong dan su dung: sandbox [mac_dinh | test_con | test_audit]\n");
+        printf("Usage: sandbox [default | test_child | test_audit]\n");
         exit(1);
     }
 
-    // --- KỊCH BẢN 1: KIỂM TRA MẶT NẠ MẶC ĐỊNH ---
-    if(strcmp(argv[1], "mac_dinh") == 0) {
+    // --- SCENARIO 1: CHECK DEFAULT MASK ---
+    if(strcmp(argv[1], "default") == 0) {
         uint64 current = getfilter();
-        printf("[Sandbox] Bo loc hien tai cua tien trinh: ");
+        printf("[Sandbox] Current process filter: ");
         print_mask(current);
-        printf("\n[Sandbox] Mac dinh = 0 (Khong co syscall nao bi chan).\n");
-        printf("[Sandbox] Thu goi uptime()... Ket qua tick: %d\n", uptime());
+        printf("\n[Sandbox] Default = 0 (No syscalls are blocked).\n");
+        printf("[Sandbox] Try calling uptime()... Result tick: %d\n", uptime());
         exit(0);
     }
 
-    // --- KỊCH BẢN 2: ÉP BỘ LỌC LÊN CON QUA SETFILTER_CHILD ---
-    if(strcmp(argv[1], "test_con") == 0) {
-        // Bật bit thứ 14 để CHẶN hệ thống lệnh SYS_UPTIME
+    // --- SCENARIO 2: FORCE FILTER ON CHILD VIA SETFILTER_CHILD ---
+    if(strcmp(argv[1], "test_child") == 0) {
+        // Enable bit 14 to BLOCK SYS_UPTIME system call
         uint64 block_uptime_mask = (1ULL << SYS_UPTIME);
 
-        printf("[Parent] Dang thiet lap child_syscall_mask de chan uptime cho con...\n");
+        printf("[Parent] Setting child_syscall_mask to block uptime for child...\n");
         
-        // Gọi chính xác hàm từ file user.h của bạn
+        // Call the exact function from your user.h
         setfilter_child(block_uptime_mask); 
 
         int pid = fork();
@@ -45,47 +45,47 @@ int main(int argc, char *argv[]) {
         }
 
         if(pid == 0) {
-            // Tien trinh con (Child)
-            printf("[Child] Tien trinh con da duoc sinh ra.\n");
-            printf("[Child] Bo loc hien tai cua con: ");
+            // Child process
+            printf("[Child] Child process created.\n");
+            printf("[Child] Current child filter: ");
             print_mask(getfilter());
-            printf("\n[Child] Con bat dau goi uptime()...\n");
+            printf("\n[Child] Child starts calling uptime()...\n");
             
-            uptime(); // Kích nổ cơ chế chặn của Kernel tại đây
+            uptime(); // Trigger Kernel blocking mechanism here
             
-            printf("[Child] [THAT BAI] Dong nay khong duoc phep in ra neu sandbox hoat dong!\n");
+            printf("[Child] [FAILED] This line should not be printed if sandbox works!\n");
             exit(0);
         } else {
-            // Tien trinh cha (Parent)
+            // Parent process
             int status;
             wait(&status);
-            printf("[Parent] Tien trinh con (PID: %d) da ket thuc.\n", pid);
+            printf("[Parent] Child process (PID: %d) has terminated.\n", pid);
         }
         exit(0);
     }
 
-    // --- KỊCH BẢN 3: KIỂM THỬ TÍNH NĂNG KIỂM TOÁN (SETAUDIT) ---
+    // --- SCENARIO 3: TEST AUDIT FEATURE (SETAUDIT) ---
     if(strcmp(argv[1], "test_audit") == 0) {
-        printf("[Parent] Kich hoat co kiem toan an ninh qua setaudit(1)...\n");
+        printf("[Parent] Enable security audit flag via setaudit(1)...\n");
         setaudit(1); 
 
         uint64 block_write_mask = (1ULL << SYS_WRITE);
-        printf("[Parent] Tuoc quyen ghi (SYS_WRITE) cua tien trinh con...\n");
+        printf("[Parent] Revoke write permission (SYS_WRITE) of child process...\n");
         setfilter_child(block_write_mask);
 
         int pid = fork();
         if(pid == 0) {
-            // Con cố tình ghi dữ liệu (gọi sys_write -> ID 16) khi đã bị cấm
-            printf("[Child] Co tinh vi pham an ninh bang cach goi printf/write...\n");
+            // Child intentionally writes data (calls sys_write -> ID 16) when forbidden
+            printf("[Child] Intentionally violate security by calling printf/write...\n");
             exit(0);
         } else {
             int status;
             wait(&status);
-            printf("[Parent] Hoan tat kiem thu Audit. Hay kiem tra Console cua Kernel de xem log.\n");
+            printf("[Parent] Audit test completed. Please check Kernel Console for logs.\n");
         }
         exit(0);
     }
 
-    printf("[Error] Tham so khong hop le.\n");
+    printf("[Error] Invalid parameter.\n");
     exit(1);
 }

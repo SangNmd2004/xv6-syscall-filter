@@ -276,23 +276,23 @@ kfork(void)
   if((np = allocproc()) == 0){
     return -1;
   }
-// Kiểm tra xem cha có dặn riêng gì không
+  // Check if parent specified a mask for the child
   if (p->child_syscall_mask != 0) {
-    // Nếu có đặt riêng, con sẽ lấy cái mask đó
+    // If specified, child inherits this specific mask
     np->syscall_mask = p->child_syscall_mask;
   } else {
-    // Nếu không dặn gì (mask = 0), con kế thừa y hệt cha
+    // If not specified (mask = 0), child inherits parent's mask
     np->syscall_mask = p->syscall_mask;
   }
 
-  // Sau khi dùng xong, có thể reset child_syscall_mask của cha về 0 
-  // nếu bạn muốn các con tiếp theo không bị dính mask này
+  // Reset parent's child_syscall_mask to 0 after use
+  // so subsequent children are not affected
   p->child_syscall_mask = 0;
   
-  // Sao chép trạng thái Audit
+  // Inherit Audit state
   np->audit_enabled = p->audit_enabled;
   
-  // Sao chép trạng thái Strict Mode
+  // Inherit Strict Mode state
   np->strict_mode = p->strict_mode;
 
   // Copy user memory from parent to child.

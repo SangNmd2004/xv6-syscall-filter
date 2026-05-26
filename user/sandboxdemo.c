@@ -10,32 +10,32 @@ void test_sandbox() {
     if (pid < 0) exit(1);
 
     if (pid == 0) {
-        printf("\n[Child] Bat dau thiet lap Sandbox...\n");
+        printf("\n[Child] Initializing Sandbox...\n");
 
-        // Áp dụng bộ lọc: CẤM open()
+        // Apply filter: BLOCK open()
         if (sandbox_block_syscall(SYS_open) < 0) {
-            printf("[Child] Loi: Khong the set filter!\n");
+            printf("[Child] Error: Cannot set filter!\n");
             exit(1);
         }
         
-        // Bật tính năng ghi log Sandbox Audit
+        // Enable Sandbox Audit logging
         if (sandbox_set_audit(1) < 0) {
-            printf("[Child] Loi: Khong the bat Audit!\n");
+            printf("[Child] Error: Cannot enable Audit!\n");
             exit(1);
         }
 
-        printf("[Child] Thu ham write (Duoc phep)...\n");
-        write(1, "[Child] Write van chay binh thuong!\n", 36);
+        printf("[Child] Testing write() (Allowed)...\n");
+        write(1, "[Child] Write works normally!\n", 30);
 
-        printf("[Child] Thu ham open (Bi cam)...\n");
-        // Hàm open sẽ bị Kernel (Dev 1) chặn và trả về -1
+        printf("[Child] Testing open() (Blocked)...\n");
+        // open() will be blocked by Kernel and return -1
         int fd = open("secret.txt", 0); 
         
         if (fd < 0) {
-            printf("[Child] Success! open() da bi sandbox chan.\n");
+            printf("[Child] Success! open() was blocked by sandbox.\n");
             exit(0);
         } else {
-            printf("[Child] FAIL! Sandbox hoat dong sai.\n");
+            printf("[Child] FAIL! Sandbox malfunctioned.\n");
             exit(1);
         }
     } else {

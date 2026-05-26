@@ -106,7 +106,7 @@ void test6_write_blocked(void) {
 }
 
 int main(void) {
-  printf("\n--- BO TEST FILTER (NGHIEM THU TUAN 3,4) ---\n");
+  printf("\n--- FILTER TEST SUITE (ACCEPTANCE) ---\n");
   test1_initial_mask_zero();
   test2_set_get_mask();
   test3_fork_inheritance();

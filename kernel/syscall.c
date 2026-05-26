@@ -145,18 +145,18 @@ static uint64 (*syscalls[])(void) = {
 void
 syscall(void)
 {
-  int num; // Đây là biến num gốc có sẵn của xv6, GIỮ NGUYÊN dòng này!
+  int num; // This is the original num variable of xv6, KEEP IT!
   struct proc *p = myproc();
 
-  num = p->trapframe->a7; // SỬA TẠI ĐÂY: Bỏ chữ "int" đi vì num đã khai báo ở trên!
+  num = p->trapframe->a7; // Fetch syscall number from a7
   
   if(num > 0 && num < NELEM(syscalls) && syscalls[num]) {
     
-    // --- ĐÂY LÀ ĐOẠN LOGIC CHẶN ---
-    // Kiểm tra xem bit thứ 'num' trong syscall_mask có đang bật không
+    // --- SANDBOX FILTERING LOGIC ---
+    // Check if the bit corresponding to 'num' is set in the syscall_mask
     if(p->syscall_mask & ((uint64)1 << num)) {
       
-      // Argument Filtering cho SYS_open
+      // Argument Filtering for SYS_open
       if (num == SYS_open) {
           int omode = p->trapframe->a1;
           char path[MAXPATH];
@@ -165,15 +165,15 @@ syscall(void)
               return;
           }
           
-          // Bỏ qua chặn nếu chỉ đọc O_RDONLY và file KHÔNG chứa chữ "secret"
+          // Bypass if opening for O_RDONLY and path does NOT contain "secret"
           if (!(omode & O_WRONLY) && !(omode & O_RDWR) && strncmp(path, "secret", 6) != 0) {
-              // Bypass Sandbox! Cho phép thực thi
+              // Bypass Sandbox! Allow execution
               p->trapframe->a0 = syscalls[num]();
               return;
           }
       }
 
-      // Xử lý Strict Mode (Kill on Violation)
+      // Handle Strict Mode (Kill on Violation)
       if (p->strict_mode) { 
         printf("Sandbox: Process %d KILLED due to strict violation!\n", p->pid);
         p->killed = 1; 
@@ -184,15 +184,15 @@ syscall(void)
       p->trapframe->a0 = -1; 
       
       if(p->audit_enabled) {
-          printf("Sandbox Audit: Tien trinh %d (%s) bi chan Syscall %d!\n", p->pid, p->name, num);
+          printf("Sandbox Audit: Process %d (%s) blocked Syscall %d!\n", p->pid, p->name, num);
           audit_log_write("Sandbox Audit: Violation detected!\n");
       }
       
-      return; // Kết thúc luôn, không chạy hàm thực thi syscalls[num]() nữa
+      return; // Terminate early, do not execute syscalls[num]()
     }
     // ------------------------------
 
-    // Nếu không bị chặn, tiến hành thực thi bình thường
+    // If not blocked, proceed with normal execution
     p->trapframe->a0 = syscalls[num]();
   } else {
     printf("%d %s: unknown sys call %d\n",

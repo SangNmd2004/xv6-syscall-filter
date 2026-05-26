@@ -7,59 +7,59 @@
 #define BLOCK(n) (1L << (n))
 
 void run_stress_test() {
-    printf("[Stress Test] Dang khoi tao 10 tien trinh con...\n");
+    printf("[Stress Test] Initializing 10 child processes...\n");
     int pids[10];
     
     for (int i = 0; i < 10; i++) {
         pids[i] = fork();
         if (pids[i] < 0) {
-            printf("[Stress Test] Loi: Khong the fork!\n");
+            printf("[Stress Test] Error: Cannot fork!\n");
             exit(1);
         }
         
         if (pids[i] == 0) {
-            // --- Tien trinh con ---
-            // Bật khiên Sandbox nhẹ (ví dụ chặn lệnh sbrk)
+            // --- Child process ---
+            // Enable light Sandbox (e.g. block sbrk)
             if (setfilter(BLOCK(SYS_sbrk)) < 0) {
-                printf("[Child %d] Loi setfilter!\n", getpid());
+                printf("[Child %d] setfilter error!\n", getpid());
                 exit(1);
             }
             
-            // Goi getfilter 10000 lan
+            // Call getfilter 10000 times
             for (int j = 0; j < 10000; j++) {
                 uint64 m = getfilter();
-                // Kiem tra dam bao Sandbox k bi vo
+                // Check to ensure Sandbox is not broken
                 if (m != BLOCK(SYS_sbrk)) {
-                    printf("[Child %d] Loi: Mask bi thay doi dot ngot!\n", getpid());
+                    printf("[Child %d] Error: Mask changed unexpectedly!\n", getpid());
                     exit(1);
                 }
             }
-            // Thoat an toan
+            // Exit safely
             exit(0);
         }
     }
     
-    // --- Tien trinh cha ---
+    // --- Parent process ---
     int success = 1;
     for (int i = 0; i < 10; i++) {
         int status;
         wait(&status);
         if (status != 0) {
             success = 0;
-            printf("[Stress Test] Tien trinh con da chet vi loi!\n");
+            printf("[Stress Test] Child process died due to error!\n");
         }
     }
     
     if (success) {
-        printf("[PASS] Stress Test 10000 lan x 10 tien trinh hoat dong hoan hao.\n");
-        printf("[PASS] Khong co Race Condition nao xay ra tren Kernel!\n");
+        printf("[PASS] Stress Test 10000 iterations x 10 processes working perfectly.\n");
+        printf("[PASS] No Race Conditions occurred in Kernel!\n");
     } else {
-        printf("[FAIL] Stress Test That Bai.\n");
+        printf("[FAIL] Stress Test Failed.\n");
     }
 }
 
 int main(int argc, char *argv[]) {
-    printf("--- BAT DAU STRESS TEST ---\n");
+    printf("--- START STRESS TEST ---\n");
     run_stress_test();
     exit(0);
 }

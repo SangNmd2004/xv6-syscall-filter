@@ -3,25 +3,25 @@
 #include "user/filter.h"
 
 int main() {
-    printf("--- TEST EXEC: Kiem tra tinh duy tri cua filter ---\n");
-    printf("1. Tien trinh hien tai dang co quyen in an (write).\n");
+    printf("--- TEST EXEC: Check filter persistence ---\n");
+    printf("1. Current process has permission to print (write).\n");
 
-    // Thiet lap filter chan write
+    // Set filter to block write
     if(setfilter(SANDBOX_BLOCK(SYS_write)) < 0){
-        printf("Loi: Khong the setfilter\n");
+        printf("Error: Cannot setfilter\n");
         exit(1);
     }
 
-    // Sau dong nay, moi lenh printf/write cua tien trinh nay se bi chan
-    // Nen chung ta se khong in gi nua ma goi exec luon.
+    // After this line, all printf/write of this process will be blocked
+    // So we won't print anything else and just call exec.
 
     char *args[] = { "ls", 0 };
     
-    // Goi exec sang chuong trinh "ls"
-    // "ls" chac chan can goi write() de in danh sach file ra man hinh
+    // Exec the "ls" program
+    // "ls" definitely needs to call write() to print the file list
     exec("ls", args);
 
-    // Neu exec thanh cong, code se khong bao gio chay den day.
-    // Neu exec loi (do chinh exec cung bi chan?), no se in ra:
+    // If exec succeeds, code never reaches here.
+    // If exec fails (because exec itself is blocked?), it would exit:
     exit(0);
 }
