@@ -21,9 +21,9 @@ void run_scenario_test() {
             exit(1);
         }
 
-        printf("[Child] Starting 'cat README' process...\n");
-        // Call cat program. This cat command will automatically call open("README")
-        char *argv[] = {"cat", "README", 0};
+        printf("[Child] Starting 'cat secret.txt' process...\n");
+        // Call cat program. This cat command will automatically call open("secret.txt")
+        char *argv[] = {"cat", "secret.txt", 0};
         
         // exec() will succeed because we haven't blocked exec
         exec("cat", argv);
@@ -38,7 +38,7 @@ void run_scenario_test() {
         
         printf("\n[Parent] 'cat' has terminated.\n");
         
-        // If cat's open is blocked, it prints "cat: cannot open README"
+        // If cat's open is blocked, it prints "cat: cannot open secret.txt"
         // and exits gracefully (see user/cat.c, if open < 0, it exits with exit(1) usually)
         
         if (status == 1) { // cat exited with 1 meaning failure to open
