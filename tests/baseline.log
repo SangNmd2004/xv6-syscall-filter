@@ -1,0 +1,8 @@
+$ syscalltest
+--- START SYSCALL BASELINE TEST ---
+Syscall: getpid | Num: 11 | Res: 3 | Status: SUCCESS
+Syscall: write | Num: 16 | Res: 0 | Status: SUCCESS
+Syscall: read | Num: 5 | Res: -1 | Status: FAILED
+Syscall: fork | Num: 1 | Res: 4 | Status: SUCCESS
+Syscall: wait | Num: 3 | Res: 4 | Status: SUCCESS
+--- END SYSCALL BASELINE TEST ---

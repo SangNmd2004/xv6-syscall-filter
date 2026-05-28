@@ -145,6 +145,14 @@ UPROGS=\
 	$U/_logstress\
 	$U/_forphan\
 	$U/_dorphan\
+<<<<<<< HEAD
+	$U/_filtertest\
+	$U/_syscalltest\
+	$U/_k28_test\
+	$U/_full_test\
+    $U/_hello
+	
+=======
 	$U/_hello\
 		$U/_syscalltest\
 		$U/_filtertest\
@@ -161,6 +169,7 @@ UPROGS=\
     	$U/_test_profile1\
 		$U/_realworld_app
 
+>>>>>>> origin/dev2/syscall-interface
 fs.img: mkfs/mkfs README $(UPROGS)
 	mkfs/mkfs fs.img README $(UPROGS)
 
@@ -208,3 +217,5 @@ check-qemu-version:
 		echo "ERROR: Need qemu version >= $(MIN_QEMU_VERSION)"; \
 		exit 1; \
 	fi
+test-filter:$U/_filtertest	
+	$(QEMU) $(QEMUOPTS)

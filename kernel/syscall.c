@@ -104,6 +104,9 @@ extern uint64 sys_link(void);
 extern uint64 sys_mkdir(void);
 extern uint64 sys_close(void);
 extern uint64 sys_hello(void);
+extern uint64 sys_setfilter(void);
+extern uint64 sys_getfilter(void);
+
 extern uint64 sys_setfilter(void); // set syscall filter
 extern uint64 sys_getfilter(void); // get syscall filter
 extern uint64 sys_setfilter_child(void);
@@ -134,11 +137,52 @@ static uint64 (*syscalls[])(void) = {
 [SYS_mkdir]   sys_mkdir,
 [SYS_close]   sys_close,
 [SYS_hello]   sys_hello,
+[SYS_setfilter] sys_setfilter,
+[SYS_getfilter] sys_getfilter,
+
+
+
+
+// Trong kernel/syscall.c
 [SYS_setfilter] sys_setfilter, // set syscall filter
 [SYS_getfilter] sys_getfilter, // get syscall filter
 [SYS_setfilter_child] sys_setfilter_child,
+<<<<<<< HEAD
 [SYS_setaudit] sys_setaudit,
 [SYS_setstrict] sys_setstrict,
+=======
+
+
+
+// Trong kernel/syscall.c
+[SYS_setfilter] sys_setfilter, // set syscall filter
+[SYS_getfilter] sys_getfilter, // get syscall filter
+[SYS_setfilter_child] sys_setfilter_child,
+
+
+
+// Trong kernel/syscall.c
+[SYS_setfilter] sys_setfilter, // set syscall filter
+[SYS_getfilter] sys_getfilter, // get syscall filter
+[SYS_setfilter_child] sys_setfilter_child,
+
+
+
+// Trong kernel/syscall.c
+[SYS_setfilter] sys_setfilter, // set syscall filter
+[SYS_getfilter] sys_getfilter, // get syscall filter
+[SYS_setfilter_child] sys_setfilter_child,
+
+
+
+// Trong kernel/syscall.c
+[SYS_setfilter] sys_setfilter, // set syscall filter
+[SYS_getfilter] sys_getfilter, // get syscall filter
+[SYS_setfilter_child] sys_setfilter_child,
+
+
+
+>>>>>>> 88b94822bca6bf5444a983ff08e3a883e0e3079d
 };
 
 
@@ -148,6 +192,7 @@ syscall(void)
   int num; // This is the original num variable of xv6, KEEP IT!
   struct proc *p = myproc();
 
+<<<<<<< HEAD
   num = p->trapframe->a7; // Fetch syscall number from a7
   
   if(num > 0 && num < NELEM(syscalls) && syscalls[num]) {
@@ -193,10 +238,27 @@ syscall(void)
     // ------------------------------
 
     // If not blocked, proceed with normal execution
+=======
+  num = p->trapframe->a7;
+  if(num > 0 && num < NELEM(syscalls) && syscalls[num]) {
+    // --- LOGIC SANDBOX ---
+    // Kiểm tra bit: 1 là CHO PHÉP, 0 là CHẶN
+    // Sửa dòng 191
+  // Sửa dòng 191
+  if(p->pid > 2 && num > 0 && !(p->syscall_mask & (1L << num))){
+    printf("[Kernel] Sandbox: Process %d (%s) tried forbidden syscall %d\n", 
+           p->pid, p->name, num);
+    p->trapframe->a0 = -1;
+    return;
+}
+    // ----------------------
+    
+>>>>>>> 88b94822bca6bf5444a983ff08e3a883e0e3079d
     p->trapframe->a0 = syscalls[num]();
   } else {
-    printf("%d %s: unknown sys call %d\n",
-            p->pid, p->name, num);
+    printf("%d %s: unknown syscall %d\n", p->pid, p->name, num);
     p->trapframe->a0 = -1;
   }
 }
+
+

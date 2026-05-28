@@ -124,10 +124,14 @@ allocproc(void)
 found:
   p->pid = allocpid();
   p->state = USED;
+<<<<<<< HEAD
   p->syscall_mask = 0;
   p->child_syscall_mask = 0;
   p->audit_enabled = 0;
   p->strict_mode = 0;
+=======
+  p->syscall_mask = 0xffffffffffffffff;
+>>>>>>> 88b94822bca6bf5444a983ff08e3a883e0e3079d
 
   // Allocate a trapframe page.
   if((p->trapframe = (struct trapframe *)kalloc()) == 0){
@@ -149,6 +153,7 @@ found:
   memset(&p->context, 0, sizeof(p->context));
   p->context.ra = (uint64)forkret;
   p->context.sp = p->kstack + PGSIZE;
+  p->syscall_mask = 0; // Đặt khiên mặc định về 0
 
   return p;
 }
