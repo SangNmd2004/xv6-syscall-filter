@@ -55,3 +55,4 @@ int setstrict(int);
 int sandbox_block_syscall(int syscall_num);
 int sandbox_set_audit(int);
 int sandbox_set_mask(uint64 mask);
+int sandbox_apply_profile(const char*);
