@@ -9,7 +9,7 @@ An advanced, highly secure system call filtering mechanism (Sandbox) implemented
 1. **Bitmasking Architecture**: Filters are encoded into a highly efficient 64-bit integer mask, ensuring $O(1)$ performance penalty for syscall interception.
 2. **Default-Allow (Blacklist) Policy**: Prioritizes OS stability. Syscalls are permitted by default unless explicitly restricted.
 3. **Policy C (Additive-Only Ratchet)**: To prevent sandbox escape, a process can only *tighten* its restrictions. Once a syscall is blocked, it can **never** be unblocked.
-4. **State Inheritance**: Child processes spawned via `fork()` strictly inherit the sandbox constraints of their parent.
+4. **Dual-Mask State Inheritance**: The system introduces a `child_syscall_mask`. A parent process can prepare a specific, highly restrictive mask to be applied strictly to its child upon `fork()`. If none is provided, the child inherits the parent's constraints.
 5. **Zero Memory Leakage**: Guaranteed cleanup of process states during `allocproc` and `freeproc`.
 6. **Audit Logging**: A dedicated syscall (`SYS_setaudit`) allows the kernel to alert system administrators when a process attempts to violate its sandbox constraints.
 7. **Deep Argument Filtering**: Intercepts `SYS_open` arguments directly from registers `a0`/`a1`. Intelligently bypasses the sandbox for safe, read-only file accesses (`O_RDONLY`) while blocking malicious paths.
@@ -32,6 +32,9 @@ sandbox_set_audit(1);
 
 // 3. Apply a custom bitmask directly
 sandbox_set_mask(SANDBOX_BLOCK(SYS_write) | SANDBOX_BLOCK(SYS_exec));
+
+// 4. Prepare a restrictive mask for a future child process
+sandbox_set_child_mask(SANDBOX_BLOCK(SYS_uptime));
 ```
 
 ---
@@ -106,17 +109,21 @@ stateDiagram-v2
     state allocproc {
         [*] --> Initialize
         Initialize --> Set_Zero: p->syscall_mask = 0
-        Set_Zero --> Audit_Zero: p->audit_enabled = 0
+        Set_Zero --> Child_Zero: p->child_syscall_mask = 0
+        Child_Zero --> Audit_Zero: p->audit_enabled = 0
         Audit_Zero --> Strict_Zero: p->strict_mode = 0
     }
     
     allocproc --> kfork: Parent calls fork()
     
     state kfork {
-        [*] --> Inherit
-        Inherit --> Copy_Mask: np->syscall_mask = p->syscall_mask
-        Copy_Mask --> Copy_Audit: np->audit_enabled = p->audit_enabled
-        Copy_Audit --> Copy_Strict: np->strict_mode = p->strict_mode
+        [*] --> Check_Child_Mask
+        Check_Child_Mask --> Apply_Child: p->child_syscall_mask != 0
+        Check_Child_Mask --> Copy_Mask: else
+        Apply_Child --> Reset_Parent: np->syscall_mask = p->child_syscall_mask
+        Reset_Parent --> Copy_Audit: p->child_syscall_mask = 0
+        Copy_Mask --> Copy_Audit: np->syscall_mask = p->syscall_mask
+        Copy_Audit --> Copy_Strict: np->audit_enabled = p->audit_enabled
     }
     
     kfork --> Running: Child executes
@@ -125,7 +132,8 @@ stateDiagram-v2
     state freeproc {
         [*] --> Cleanup
         Cleanup --> Reset_Mask: p->syscall_mask = 0
-        Reset_Mask --> Reset_Audit: p->audit_enabled = 0
+        Reset_Mask --> Reset_Child: p->child_syscall_mask = 0
+        Reset_Child --> Reset_Audit: p->audit_enabled = 0
         Reset_Audit --> Reset_Strict: p->strict_mode = 0
     }
     
