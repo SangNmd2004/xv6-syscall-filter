@@ -185,7 +185,7 @@ syscall(void)
       
       if(p->audit_enabled) {
           printf("Sandbox Audit: Process %d (%s) blocked Syscall %d!\n", p->pid, p->name, num);
-          audit_log_write("Sandbox Audit: Violation detected!\n");
+          audit_log_write(p->pid, num);
       }
       
       return; // Terminate early, do not execute syscalls[num]()

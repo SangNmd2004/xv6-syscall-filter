@@ -54,3 +54,11 @@ int main(int argc, char *argv[]) {
     run_scenario_test();
     exit(0);
 }
+
+
+// Trong bài test này, tiến trình bị cấm đọc file nhạy cảm
+// Tình huống: Worker process (cat) cố gắng mở file secret.txt
+// Chính sách áp dụng: setfilter(BLOCK(SYS_open))
+// Kết quả: Worker bị chặn, không thể đọc file, Parent vẫn hoạt động bình thường
+// Chứng minh: Khả năng cô lập tiến trình hiệu quả
+

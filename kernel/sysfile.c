@@ -504,11 +504,37 @@ sys_pipe(void)
   return 0;
 }
 
+static void int_to_str(int n, char *buf) {
+  int i = 0;
+  if(n == 0) { buf[i++] = '0'; buf[i] = '\0'; return; }
+  char temp[16];
+  int j = 0;
+  while(n > 0) { temp[j++] = (n % 10) + '0'; n /= 10; }
+  while(j > 0) { buf[i++] = temp[--j]; }
+  buf[i] = '\0';
+}
+
 // Persistent Audit Logging: Write message directly to /audit.log
-void audit_log_write(char *msg)
+void audit_log_write(int pid, int syscall_num)
 {
   struct inode *ip;
-  int n = strlen(msg);
+  char msg[64] = "AUDIT: PID=";
+  char num_buf[16];
+  int len = 11; // length of "AUDIT: PID="
+  
+  // Convert pid
+  int_to_str(pid, num_buf);
+  for(int i = 0; num_buf[i]; i++) msg[len++] = num_buf[i];
+  
+  // Append syscall
+  char *s2 = " BLOCKED SYSCALL=";
+  for(int i = 0; s2[i]; i++) msg[len++] = s2[i];
+  
+  int_to_str(syscall_num, num_buf);
+  for(int i = 0; num_buf[i]; i++) msg[len++] = num_buf[i];
+  
+  msg[len++] = '\n';
+  msg[len] = '\0';
 
   begin_op();
   if((ip = namei("/audit.log")) == 0){
@@ -519,7 +545,7 @@ void audit_log_write(char *msg)
   
   ilock(ip);
   if(ip->type == T_FILE){
-    writei(ip, 0, (uint64)msg, ip->size, n);
+    writei(ip, 0, (uint64)msg, ip->size, len);
   }
   iunlockput(ip);
   end_op();

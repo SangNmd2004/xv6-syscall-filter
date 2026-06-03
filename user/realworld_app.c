@@ -80,3 +80,12 @@ int main(void) {
     printf("[Master] Server shutting down safely.\n");
     exit(0);
 }
+
+//Tinh huống giả định: Server đang xử lý một yêu cầu xử lý file dữ liệu (ví dụ: nén file, dịch ngược code)
+//Worker bị lọt vào tay kẻ tấn công do lỗ hổng Buffer Overflow.
+//Kết quả: Hệ thống đã dùng Sandbox Kill Worker và tiếp tục xử lý Request khác
+
+// Worker process (Master): có toàn quyền
+// Worker process (child): xử lý dữ liệu không tin cậy sẽ bị nhốt vào Sandbox
+
+

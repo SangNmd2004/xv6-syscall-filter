@@ -48,3 +48,8 @@ int main() {
     test_sandbox();
     exit(0);
 }
+
+//Kiến trúc dual-mask 
+//Tiến trình Cha thiết lập một ranh giới bảo mật riêng biệt và bơm nó cho Tiến trình Con ngay tại thời điểm khởi tạo.
+//Kết quả : Tiến trình Con bị tước quyền gọi hàm open(), nhưng Tiến trình Cha vẫn giữ nguyên 100% quyền lực. 
+//Khi phát hiện vi phạm, Kernel chặn đứng tiến trình Con và trả về mã lỗi -1 (Graceful Fail) thay vì làm sập ứng dụng.

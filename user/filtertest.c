@@ -116,3 +116,15 @@ int main(void) {
   printf("------------------------------------------\n\n");
   exit(0);
 }
+
+// TC1: Kiểm tra xem mask ban đầu có đúng là 0 không
+// TC2: Kiểm tra xem setfilter và getfilter có hoạt động đúng không
+// TC3: Kiểm tra xem mask có được kế thừa từ tiến trình cha sang tiến trình con không
+// TC4: Kiểm tra chính sách C (Deny weaken) - Không cho phép nới lỏng mask
+// TC5: Kiểm tra chính sách C (Allow tighten) - Cho phép siết chặt mask
+// TC6: Kiểm tra write() có bị block không
+
+// tính năng Khóa Ratchet một chiều (One-Way Ratchet)
+// Chỉ cho phép siết chặt ranh giới bảo mật
+// TC4 và TC5 là minh chứng cho tính năng này.
+
