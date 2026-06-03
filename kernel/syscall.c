@@ -177,6 +177,7 @@ syscall(void)
       if (p->strict_mode) { 
         printf("Sandbox: Process %d KILLED due to strict violation!\n", p->pid);
         p->killed = 1; 
+        if(p->audit_enabled) audit_log_write(p->pid, num);
         p->trapframe->a0 = -1;
         return;
       } 

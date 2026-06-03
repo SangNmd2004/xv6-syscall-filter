@@ -2,6 +2,7 @@
 #include "kernel/stat.h"
 #include "user/user.h"
 #include "kernel/syscall.h" 
+#include "user/filter.h"
 
 #define BLOCK(n) (1L << (n))
 
@@ -20,6 +21,8 @@ void run_scenario_test() {
             printf("[Child] setfilter error!\n");
             exit(1);
         }
+        
+        sandbox_set_audit(1);
 
         printf("[Child] Starting 'cat secret.txt' process...\n");
         // Call cat program. This cat command will automatically call open("secret.txt")

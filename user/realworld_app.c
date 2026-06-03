@@ -30,6 +30,7 @@ void handle_client_request(int client_id) {
 
         // Bật Strict Mode (Tử hình ngay lập tức nếu Worker bị hack và cố gọi lệnh cấm)
         setstrict(1);
+        sandbox_set_audit(1);
         printf("   [Worker %d] Sandbox LOCKED & Strict Mode ENABLED.\n", client_id);
 
         // 2. Simulate normal data processing
