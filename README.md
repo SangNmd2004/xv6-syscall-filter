@@ -28,6 +28,91 @@ All sandbox violations are persistently logged directly to the hard drive (`/aud
 
 ---
 
+## 📊 System Architecture Diagrams
+
+### Syscall Interception & Audit Workflow
+When a user program executes an `ecall`, the Trap Handler forwards it to the Syscall Dispatcher. The dispatcher performs a $O(1)$ Bitmask check and a Deep Argument Inspection. If blocked and deemed unsafe, it triggers the Persistent FS Logger before returning a Graceful Fail (`-1`).
+
+```mermaid
+sequenceDiagram
+    participant UserProcess as User Process
+    participant Trap as Trap Handler (trap.c)
+    participant SyscallDispatcher as Syscall Dispatcher (syscall.c)
+    participant FS as File System (sysfile.c)
+    participant Kernel as Kernel Execution
+
+    UserProcess->>Trap: ecall (e.g., SYS_open = 15)
+    Trap->>SyscallDispatcher: trapframe->a7 = 15
+    
+    Note over SyscallDispatcher: Sandbox & Argument Inspection
+    SyscallDispatcher->>SyscallDispatcher: Check p->syscall_mask & (1 << 15)
+    
+    alt is Blocked but Safe (O_RDONLY & non-secret)
+        SyscallDispatcher->>Kernel: Bypass Sandbox: Execute sys_open()
+        Kernel-->>UserProcess: Return file descriptor
+    else is Blocked & Unsafe (Write or secret.txt)
+        SyscallDispatcher->>SyscallDispatcher: Check p->strict_mode
+        alt Strict Mode ENABLED
+            SyscallDispatcher->>UserProcess: KILL PROCESS (p->killed = 1)
+        else Strict Mode DISABLED
+            SyscallDispatcher->>SyscallDispatcher: Check p->audit_enabled
+            alt Audit Enabled
+                SyscallDispatcher->>FS: audit_log_write()
+                Note over FS: begin_op() -> namei() -> writei() -> end_op()
+                FS-->>SyscallDispatcher: Appended to /audit.log
+            end
+            SyscallDispatcher-->>UserProcess: Return -1 (Graceful Fail)
+        end
+    else is Allowed (Bit == 0)
+        SyscallDispatcher->>Kernel: Execute sys_open()
+        Kernel-->>UserProcess: Return file descriptor
+    end
+```
+
+### Security State Machine
+During the `allocproc -> kfork -> freeproc` lifecycle, the kernel guarantees that all security masks (`syscall_mask` and `audit_enabled`) are zero-initialized, deeply copied during fork, and cleanly wiped upon process termination.
+
+```mermaid
+stateDiagram-v2
+    direction LR
+    [*] --> allocproc: Kernel Boots / Fork
+    
+    state allocproc {
+        [*] --> Initialize
+        Initialize --> Set_Zero: p->syscall_mask = 0
+        Set_Zero --> Child_Zero: p->child_syscall_mask = 0
+        Child_Zero --> Audit_Zero: p->audit_enabled = 0
+        Audit_Zero --> Strict_Zero: p->strict_mode = 0
+    }
+    
+    allocproc --> kfork: Parent calls fork()
+    
+    state kfork {
+        [*] --> Check_Child_Mask
+        Check_Child_Mask --> Apply_Child: p->child_syscall_mask != 0
+        Check_Child_Mask --> Copy_Mask: else
+        Apply_Child --> Reset_Parent: np->syscall_mask = p->child_syscall_mask
+        Reset_Parent --> Copy_Audit: p->child_syscall_mask = 0
+        Copy_Mask --> Copy_Audit: np->syscall_mask = p->syscall_mask
+        Copy_Audit --> Copy_Strict: np->audit_enabled = p->audit_enabled
+    }
+    
+    kfork --> Running: Child executes
+    Running --> freeproc: Process Exits
+    
+    state freeproc {
+        [*] --> Cleanup
+        Cleanup --> Reset_Mask: p->syscall_mask = 0
+        Reset_Mask --> Reset_Child: p->child_syscall_mask = 0
+        Reset_Child --> Reset_Audit: p->audit_enabled = 0
+        Reset_Audit --> Reset_Strict: p->strict_mode = 0
+    }
+    
+    freeproc --> [*]: Reclaimed by Kernel
+```
+
+---
+
 ## 🛠️ Getting Started
 
 ### Prerequisites
