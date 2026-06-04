@@ -1,143 +1,95 @@
-# xv6 Syscall Filter (Sandbox OS)
+# 🛡️ xv6-syscall-filter (Sandbox OS)
 
-An advanced, highly secure system call filtering mechanism (Sandbox) implemented within the **xv6-riscv** operating system. This project allows user-space programs to restrict their own privileges dynamically, preventing malicious or compromised code from executing unauthorized system calls.
+**An Advanced Active Defense Kernel Extension for xv6-riscv**
 
----
-
-## 🌟 Key Features
-
-1. **Bitmasking Architecture**: Filters are encoded into a highly efficient 64-bit integer mask, ensuring $O(1)$ performance penalty for syscall interception.
-2. **Default-Allow (Blacklist) Policy**: Prioritizes OS stability. Syscalls are permitted by default unless explicitly restricted.
-3. **Policy C (Additive-Only Ratchet)**: To prevent sandbox escape, a process can only *tighten* its restrictions. Once a syscall is blocked, it can **never** be unblocked.
-4. **Dual-Mask State Inheritance**: The system introduces a `child_syscall_mask`. A parent process can prepare a specific, highly restrictive mask to be applied strictly to its child upon `fork()`. If none is provided, the child inherits the parent's constraints.
-5. **Zero Memory Leakage**: Guaranteed cleanup of process states during `allocproc` and `freeproc`.
-6. **Audit Logging**: A dedicated syscall (`SYS_setaudit`) allows the kernel to alert system administrators when a process attempts to violate its sandbox constraints.
-7. **Deep Argument Filtering**: Intercepts `SYS_open` arguments directly from registers `a0`/`a1`. Intelligently bypasses the sandbox for safe, read-only file accesses (`O_RDONLY`) while blocking malicious paths.
-8. **Persistent FS Logging**: Audit logs are securely written to `/audit.log` via deep kernel-level file operations (`begin_op`, `writei`) without risking system deadlocks.
+This project introduces a highly efficient, $O(1)$ latency **Sandbox Architecture** directly into the xv6-riscv kernel. It provides proactive security mechanisms, process isolation, and atomic file-system auditing to mitigate privilege escalation and real-world vulnerabilities (like Buffer Overflows).
 
 ---
 
-## 🛠️ The Sandbox API (User-Space)
+## 🌟 Core Architecture & Features
 
-We provide a clean, polished, and intuitive C library (`user/filter.h`) for developers to easily sandbox their applications.
+### 1. $\mathcal{O}(1)$ Bitmask Filtering
+Instead of expensive string-based ACLs, the kernel leverages a 64-bit integer mask embedded in the Process Control Block (`struct proc`). System call verification is performed in a single hardware-level bitwise `AND` operation, ensuring **zero overhead latency** during syscall dispatch.
 
-```c
-#include "user/filter.h"
+### 2. Dual-Mask Architecture & Inheritance
+A parent process can establish a secure perimeter for a child process *before* it is created using `sandbox_set_child_mask()`. When `fork()` is called, the child inherits the restricted mask, while the parent retains 100% of its original privileges.
 
-// 1. Block a specific system call (e.g., prevent file opening)
-sandbox_block_syscall(SYS_open);
+### 3. Additive-Only Ratchet Policy
+To prevent malicious privilege escalation, the kernel enforces a strict one-way ratchet policy. Once a system call is blocked via `setfilter()`, it can **never** be unblocked. Any attempt to weaken the sandbox is rejected mathematically at the kernel level.
 
-// 2. Enable Audit Logging (Prints to Kernel Console upon violation)
-sandbox_set_audit(1);
+### 4. Deep Argument Inspection
+The sandbox is capable of bypassing shallow syscall interception to inspect actual register arguments (e.g., `a0`, `a1`). It can dynamically allow safe operations (like `open()` on normal files) while blocking attempts to access restricted paths like `secret.txt`.
 
-// 3. Apply a custom bitmask directly
-sandbox_set_mask(SANDBOX_BLOCK(SYS_write) | SANDBOX_BLOCK(SYS_exec));
+### 5. Strict Mode (Kill-on-Violation)
+Simulates a real-world server defense (Master-Worker architecture). If a worker process is compromised (e.g., via Buffer Overflow) and attempts to execute a malicious shellcode (`exec`), the Kernel immediately intercepts and terminates the process (`p->killed = 1`), saving the host machine.
 
-// 4. Prepare a restrictive mask for a future child process
-sandbox_set_child_mask(SANDBOX_BLOCK(SYS_uptime));
-```
+### 6. Atomic File System Auditing
+All sandbox violations are persistently logged directly to the hard drive (`/audit.log`). Bypassing user-space tampering, the Kernel opens an **Atomic FS Transaction** (`begin_op`, `writei`) to safely and consistently record the exact PID and Syscall number of the attacker.
 
 ---
 
-## 🚀 How to Build and Run
+## 🛠️ Getting Started
 
-### 1. Compilation
-Make sure you have the RISC-V toolchain installed. Run the following command to compile the OS and launch QEMU:
+### Prerequisites
+- QEMU Emulator for RISC-V (`qemu-system-riscv64`)
+- RISC-V GCC Toolchain (`riscv64-unknown-elf-gcc`)
+
+### Compilation & Execution
 ```bash
+# Clone the repository
+git clone https://github.com/SangNmd2004/xv6-syscall-filter.git
+cd xv6-syscall-filter
+
+# Clean previous builds
+make clean
+
+# Build the kernel and launch QEMU
 make qemu
 ```
 
-### 2. Available Test Suites
-Once inside the xv6 shell, you can run the following built-in test programs:
-
-*   **`sandboxdemo`**: An interactive demonstration showing a child process successfully sandboxing itself and triggering the Audit Logger when attempting to call `open()`.
-*   **`stresstest`**: A rigorous stability test that floods the kernel with 10,000 recursive `fork()` and syscall filtering requests to ensure zero memory leaks.
-*   **`scenariotest`**: Simulates a real-world scenario where a restricted shell attempts to execute `cat secret.txt` but is intercepted by the Sandbox.
-*   **`filtertest`**: The core unit test suite verifying the integrity of the Additive-Only Ratchet policy and inheritance rules.
-
----
-
-## 📊 System Architecture
-
-### Syscall Interception & Audit Workflow
-When a user program executes an `ecall`, the Trap Handler forwards it to the Syscall Dispatcher. The dispatcher performs a $O(1)$ Bitmask check and a Deep Argument Inspection. If blocked and deemed unsafe, it triggers the Persistent FS Logger before returning a Graceful Fail (`-1`).
-
-```mermaid
-sequenceDiagram
-    participant UserProcess as User Process
-    participant Trap as Trap Handler (trap.c)
-    participant SyscallDispatcher as Syscall Dispatcher (syscall.c)
-    participant FS as File System (sysfile.c)
-    participant Kernel as Kernel Execution
-
-    UserProcess->>Trap: ecall (e.g., SYS_open = 15)
-    Trap->>SyscallDispatcher: trapframe->a7 = 15
-    
-    Note over SyscallDispatcher: Sandbox & Argument Inspection
-    SyscallDispatcher->>SyscallDispatcher: Check p->syscall_mask & (1 << 15)
-    
-    alt is Blocked but Safe (O_RDONLY & non-secret)
-        SyscallDispatcher->>Kernel: Bypass Sandbox: Execute sys_open()
-        Kernel-->>UserProcess: Return file descriptor
-    else is Blocked & Unsafe (Write or secret.txt)
-        SyscallDispatcher->>SyscallDispatcher: Check p->strict_mode
-        alt Strict Mode ENABLED
-            SyscallDispatcher->>UserProcess: KILL PROCESS (p->killed = 1)
-        else Strict Mode DISABLED
-            SyscallDispatcher->>SyscallDispatcher: Check p->audit_enabled
-            alt Audit Enabled
-                SyscallDispatcher->>FS: audit_log_write()
-                Note over FS: begin_op() -> namei() -> writei() -> end_op()
-                FS-->>SyscallDispatcher: Appended to /audit.log
-            end
-            SyscallDispatcher-->>UserProcess: Return -1 (Graceful Fail)
-        end
-    else is Allowed (Bit == 0)
-        SyscallDispatcher->>Kernel: Execute sys_open()
-        Kernel-->>UserProcess: Return file descriptor
-    end
-```
-
-### Security State Machine
-During the `allocproc -> kfork -> freeproc` lifecycle, the kernel guarantees that all security masks (`syscall_mask` and `audit_enabled`) are zero-initialized, deeply copied during fork, and cleanly wiped upon process termination.
-
-```mermaid
-stateDiagram-v2
-    direction LR
-    [*] --> allocproc: Kernel Boots / Fork
-    
-    state allocproc {
-        [*] --> Initialize
-        Initialize --> Set_Zero: p->syscall_mask = 0
-        Set_Zero --> Child_Zero: p->child_syscall_mask = 0
-        Child_Zero --> Audit_Zero: p->audit_enabled = 0
-        Audit_Zero --> Strict_Zero: p->strict_mode = 0
-    }
-    
-    allocproc --> kfork: Parent calls fork()
-    
-    state kfork {
-        [*] --> Check_Child_Mask
-        Check_Child_Mask --> Apply_Child: p->child_syscall_mask != 0
-        Check_Child_Mask --> Copy_Mask: else
-        Apply_Child --> Reset_Parent: np->syscall_mask = p->child_syscall_mask
-        Reset_Parent --> Copy_Audit: p->child_syscall_mask = 0
-        Copy_Mask --> Copy_Audit: np->syscall_mask = p->syscall_mask
-        Copy_Audit --> Copy_Strict: np->audit_enabled = p->audit_enabled
-    }
-    
-    kfork --> Running: Child executes
-    Running --> freeproc: Process Exits
-    
-    state freeproc {
-        [*] --> Cleanup
-        Cleanup --> Reset_Mask: p->syscall_mask = 0
-        Reset_Mask --> Reset_Child: p->child_syscall_mask = 0
-        Reset_Child --> Reset_Audit: p->audit_enabled = 0
-        Reset_Audit --> Reset_Strict: p->strict_mode = 0
-    }
-    
-    freeproc --> [*]: Reclaimed by Kernel
+Once inside the xv6 shell `$`, prepare the audit log file before running tests:
+```bash
+$ echo > audit.log
 ```
 
 ---
+
+## 🚀 Test Suites (Acceptance & Scenarios)
+
+We have built 5 dedicated test applications to mathematically and practically verify the sandbox's integrity. Run them in the xv6 shell:
+
+### 1. `filtertest` (Logical Acceptance)
+Runs 6 Unit Tests validating the Default Mask, State Inheritance, the Ratchet Policy (Deny weaken, Allow tighten), and basic interception.
+```bash
+$ filtertest
+```
+
+### 2. `sandboxdemo` (Dual-Mask Demo)
+Demonstrates a parent securing a child process. The child's `write()` succeeds, but its `open()` is successfully blocked (Graceful Fail).
+```bash
+$ sandboxdemo
+```
+
+### 3. `scenariotest` (Deep Inspection)
+Demonstrates an attacker attempting to `cat secret.txt`. The Kernel intercepts the path, blocks the file read, and prevents sensitive data leakage.
+```bash
+$ scenariotest
+```
+
+### 4. `realworld_app` (Buffer Overflow Mitigation)
+Demonstrates a Master-Worker server. The Worker operates in **Strict Mode**. When a simulated attacker triggers an overflow to pop a shell (`exec`), the Kernel instantly **KILLS** the Worker. The Master process remains unharmed and recovers the server.
+```bash
+$ realworld_app
+```
+
+### 5. `audit.log` (Kernel Surveillance)
+After running the tests above, read the audit log to see the Kernel's persistent records of all violations.
+```bash
+$ cat audit.log
+```
+
+---
+
+## 👥 Authors
+- Developed as part of an Advanced Operating Systems Security Project.
+- Built on top of MIT's [xv6-riscv](https://github.com/mit-pdos/xv6-riscv) educational operating system.
