@@ -17,8 +17,13 @@ A parent process can establish a secure perimeter for a child process *before* i
 ### 3. Additive-Only Ratchet Policy
 To prevent malicious privilege escalation, the kernel enforces a strict one-way ratchet policy. Once a system call is blocked via `setfilter()`, it can **never** be unblocked. Any attempt to weaken the sandbox is rejected mathematically at the kernel level.
 
-### 4. Deep Argument Inspection
-The sandbox is capable of bypassing shallow syscall interception to inspect actual register arguments (e.g., `a0`, `a1`). It can dynamically allow safe operations (like `open()` on normal files) while blocking attempts to access restricted paths like `secret.txt`.
+### 4. Deep Argument Inspection (Host Intrusion Prevention System - HIPS)
+The sandbox bypasses shallow syscall interception to inspect actual register arguments (e.g., `a0`, `a1`), acting as a full-fledged HIPS:
+- **`SYS_kill` (Anti-Assassination):** Protects core system processes (PID 1 `init` and PID 2 `shell`) from being killed by malware.
+- **`SYS_exec` (RCE Prevention):** Inspects execution paths. Automatically blocks attempts to execute terminal shells (`sh`) or destructive commands (`rm`), preventing Remote Code Execution.
+- **`SYS_unlink` (System Integrity):** Protects critical system directories (e.g., `/bin/`) and files (e.g., `README`) from Ransomware/Wiper deletion attempts.
+- **`SYS_sbrk` (DoS Mitigation):** Enforces Resource Quotas by preventing a sandboxed process from allocating excessive memory (>1MB per request or >10MB total), mitigating local Denial of Service attacks.
+- **`SYS_open` (Access Control):** Dynamically allows safe read-only operations while blocking attempts to access restricted paths like `secret.txt`.
 
 ### 5. Strict Mode (Kill-on-Violation)
 Simulates a real-world server defense (Master-Worker architecture). If a worker process is compromised (e.g., via Buffer Overflow) and attempts to execute a malicious shellcode (`exec`), the Kernel immediately intercepts and terminates the process (`p->killed = 1`), saving the host machine.
@@ -161,13 +166,19 @@ Demonstrates an attacker attempting to `cat secret.txt`. The Kernel intercepts t
 $ scenariotest
 ```
 
-### 4. `realworld_app` (Buffer Overflow Mitigation)
+### 4. `hipstest` (Deep Argument Inspection / HIPS)
+A rigorous 8-stage unit test that simulates 4 different attack vectors (Assassination, RCE, Wiper, Memory DoS) and proves that the Kernel's Deep Inspection can successfully differentiate between malicious payloads and safe, normal operations.
+```bash
+$ hipstest
+```
+
+### 5. `realworld_app` (Buffer Overflow Mitigation)
 Demonstrates a Master-Worker server. The Worker operates in **Strict Mode**. When a simulated attacker triggers an overflow to pop a shell (`exec`), the Kernel instantly **KILLS** the Worker. The Master process remains unharmed and recovers the server.
 ```bash
 $ realworld_app
 ```
 
-### 5. `audit.log` (Kernel Surveillance)
+### 6. `audit.log` (Kernel Surveillance)
 After running the tests above, read the audit log to see the Kernel's persistent records of all violations.
 ```bash
 $ cat audit.log
