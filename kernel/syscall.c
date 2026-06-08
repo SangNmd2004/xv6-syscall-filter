@@ -156,7 +156,7 @@ syscall(void)
     // Check if the bit corresponding to 'num' is set in the syscall_mask
     if(p->syscall_mask & ((uint64)1 << num)) {
       
-      // Argument Filtering for SYS_open
+      // 1. Argument Filtering for SYS_open (Read-Only safe paths)
       if (num == SYS_open) {
           int omode = p->trapframe->a1;
           char path[MAXPATH];
@@ -164,10 +164,49 @@ syscall(void)
               p->trapframe->a0 = -1;
               return;
           }
-          
-          // Bypass if opening for O_RDONLY and path does NOT contain "secret"
           if (!(omode & O_WRONLY) && !(omode & O_RDWR) && strncmp(path, "secret", 6) != 0) {
-              // Bypass Sandbox! Allow execution
+              p->trapframe->a0 = syscalls[num]();
+              return;
+          }
+      }
+      // 2. Argument Filtering for SYS_kill (Protect PID 1 and 2)
+      else if (num == SYS_kill) {
+          int target_pid = p->trapframe->a0;
+          if (target_pid > 2) {
+              p->trapframe->a0 = syscalls[num]();
+              return;
+          }
+      }
+      // 3. Argument Filtering for SYS_exec (Whitelist/Blacklist)
+      else if (num == SYS_exec) {
+          char path[MAXPATH];
+          if (fetchstr(p->trapframe->a0, path, MAXPATH) < 0) {
+              p->trapframe->a0 = -1;
+              return;
+          }
+          // Block "sh" and "rm", allow everything else
+          if (strncmp(path, "sh", 3) != 0 && strncmp(path, "rm", 3) != 0) {
+              p->trapframe->a0 = syscalls[num]();
+              return;
+          }
+      }
+      // 4. Argument Filtering for SYS_unlink (Protect System Files)
+      else if (num == SYS_unlink) {
+          char path[MAXPATH];
+          if (fetchstr(p->trapframe->a0, path, MAXPATH) < 0) {
+              p->trapframe->a0 = -1;
+              return;
+          }
+          if (strncmp(path, "/bin/", 5) != 0 && strncmp(path, "README", 6) != 0) {
+              p->trapframe->a0 = syscalls[num]();
+              return;
+          }
+      }
+      // 5. Argument Filtering for SYS_sbrk (Resource Limit / DoS Protection)
+      else if (num == SYS_sbrk) {
+          int n = p->trapframe->a0;
+          // Bypass if allocating <= 1MB at once, and total size <= 10MB
+          if (n <= 1024 * 1024 && (p->sz + n) <= 10 * 1024 * 1024) {
               p->trapframe->a0 = syscalls[num]();
               return;
           }
