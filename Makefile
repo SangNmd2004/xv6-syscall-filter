@@ -157,7 +157,8 @@ UPROGS=\
 		$U/_sandbox\
 		$U/_sandbox_strict\
 		$U/_test_profile\
-		$U/_realworld_app
+		$U/_realworld_app\
+		$U/_hipstest
 
 fs.img: mkfs/mkfs README $(UPROGS)
 	mkfs/mkfs fs.img README $(UPROGS)
