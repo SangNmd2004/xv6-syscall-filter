@@ -190,14 +190,14 @@ syscall(void)
               return;
           }
       }
-      // 4. Argument Filtering for SYS_unlink (Protect System Files)
+      // 4. Argument Filtering for SYS_unlink (Protect System Files & Audit Log)
       else if (num == SYS_unlink) {
           char path[MAXPATH];
           if (fetchstr(p->trapframe->a0, path, MAXPATH) < 0) {
               p->trapframe->a0 = -1;
               return;
           }
-          if (strncmp(path, "/bin/", 5) != 0 && strncmp(path, "README", 6) != 0) {
+          if (strncmp(path, "/bin/", 5) != 0 && strncmp(path, "README", 6) != 0 && strncmp(path, "audit.log", 9) != 0) {
               p->trapframe->a0 = syscalls[num]();
               return;
           }
