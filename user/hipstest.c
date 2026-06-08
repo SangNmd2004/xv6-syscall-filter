@@ -24,6 +24,7 @@ int main() {
         printf("Failed to set filter\n");
         exit(1);
     }
+    sandbox_set_audit(1);
 
     // 1. Test SYS_kill
     int r1 = kill(1); // Try to kill init
